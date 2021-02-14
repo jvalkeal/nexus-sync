@@ -119,7 +119,7 @@ export interface ActionOptions {
 }
 
 export interface Repository {
-  type: string
+  type: string;
 }
 
 /**

@@ -2,12 +2,10 @@ import fs from 'fs';
 import { findFiles, generateChecksumFiles, createCheckSums } from '../src/utils';
 
 describe('utils.ts', () => {
-
   function deleteFile(path: string) {
     try {
       fs.unlinkSync(path);
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   function deleteFiles() {
@@ -39,7 +37,9 @@ describe('utils.ts', () => {
     expect(checksums.get('md5')).toBe('9a0364b9e99bb480dd25e1f0284c8555');
     expect(checksums.get('sha1')).toBe('040f06fd774092478d450774f5ba30c5da78acc8');
     expect(checksums.get('sha256')).toBe('ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73');
-    expect(checksums.get('sha512')).toBe('b2d1d285b5199c85f988d03649c37e44fd3dde01e5d69c50fef90651962f48110e9340b60d49a479c4c0b53f5f07d690686dd87d2481937a512e8b85ee7c617f');
+    expect(checksums.get('sha512')).toBe(
+      'b2d1d285b5199c85f988d03649c37e44fd3dde01e5d69c50fef90651962f48110e9340b60d49a479c4c0b53f5f07d690686dd87d2481937a512e8b85ee7c617f'
+    );
   });
 
   it('should generate checksum files', async () => {

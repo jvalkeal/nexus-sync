@@ -48,7 +48,7 @@ export async function createCheckSums(path: string, config: GenerateChecksum[]):
         hashes.set(c.type, hash);
       });
       const stream = fs.createReadStream(path);
-      stream.on('data', (data) => {
+      stream.on('data', data => {
         for (const hash of hashes.values()) {
           hash.update(data, 'utf8');
         }
@@ -118,5 +118,5 @@ export function numberValue(value: number | string | undefined, defaultValue: nu
  * Returns a simple promise with delay timeout.
  */
 export function delayPromise(millis: number): Promise<void> {
-  return new Promise( resolve => setTimeout(resolve, millis) );
+  return new Promise(resolve => setTimeout(resolve, millis));
 }

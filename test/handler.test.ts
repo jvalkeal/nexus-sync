@@ -5,9 +5,7 @@ import { ActionOptions } from '../src/interfaces';
 import { STAGING_PROFILES_1 } from './data/mock-data';
 
 describe('handler tests', () => {
-
-  beforeEach(() => {
-  });
+  beforeEach(() => {});
 
   it('should close and release successfully', async () => {
     const options: ActionOptions = {
@@ -26,5 +24,4 @@ describe('handler tests', () => {
       generateChecksumsConfig: []
     };
   });
-
 });

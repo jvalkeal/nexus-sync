@@ -160,7 +160,7 @@ export class Nexus2Client {
           {
             headers: {
               'Content-Type': 'application/octet-stream',
-              'Pragma': 'no-cache',
+              Pragma: 'no-cache',
               'Cache-Control': 'no-cache'
             }
           }

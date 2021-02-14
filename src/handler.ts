@@ -15,7 +15,6 @@ import { findFiles, delayPromise, generateChecksumFiles } from './utils';
  * 4. If errors occur, choose if not to drop to let user investigate
  */
 export async function handle(actionOptions: ActionOptions): Promise<void> {
-
   logDebug(`Handling with options ${inspect(actionOptions)}`);
   const nexusClient = new Nexus2Client(actionOptions.nexusServer);
   core.debug(`github context: ${inspect(github.context, true, 10)}`);
@@ -120,7 +119,11 @@ async function uploadFiles(nexusClient: Nexus2Client, dir: string, stagedReposit
 /**
  * Close staging repository.
  */
-async function closeStagingRepo(nexusClient: Nexus2Client, actionOptions: ActionOptions, stagedRepositoryId: string): Promise<void> {
+async function closeStagingRepo(
+  nexusClient: Nexus2Client,
+  actionOptions: ActionOptions,
+  stagedRepositoryId: string
+): Promise<void> {
   const stagingProfileId = await nexusClient.getStagingProfileId(actionOptions.stagingProfileName);
   await nexusClient.closeStagingRepo(stagingProfileId, {
     data: {
@@ -133,7 +136,11 @@ async function closeStagingRepo(nexusClient: Nexus2Client, actionOptions: Action
 /**
  * Release staging repository.
  */
-async function releaseStagingRepo(nexusClient: Nexus2Client, actionOptions: ActionOptions, stagedRepositoryId: string): Promise<void> {
+async function releaseStagingRepo(
+  nexusClient: Nexus2Client,
+  actionOptions: ActionOptions,
+  stagedRepositoryId: string
+): Promise<void> {
   const stagingProfileId = await nexusClient.getStagingProfileId(actionOptions.stagingProfileName);
   await nexusClient.promoteStagingRepo(stagingProfileId, {
     data: {
