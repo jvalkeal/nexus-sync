@@ -94,3 +94,10 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 .vscode/
+
+# Generated checksum files in tests
+test/data/nexus/org/example/*.md5
+test/data/nexus/org/example/*.sha1
+test/data/nexus/org/example/*.sha256
+test/data/nexus/org/example/*.sha512
+
