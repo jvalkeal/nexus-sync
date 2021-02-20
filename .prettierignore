@@ -1,2 +1,5 @@
 # dont care about typings
 types/
+
+# for test data
+test/data/
