@@ -549,7 +549,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logDebug = exports.logInfo = exports.logError = exports.logWarn = void 0;
+exports.endGroup = exports.startGroup = exports.logDebug = exports.logInfo = exports.logError = exports.logWarn = void 0;
 const core = __importStar(__webpack_require__(470));
 function logWarn(message) {
     core.warning(message);
@@ -567,6 +567,14 @@ function logDebug(message) {
     core.debug(message);
 }
 exports.logDebug = logDebug;
+function startGroup(group) {
+    core.startGroup(group);
+}
+exports.startGroup = startGroup;
+function endGroup() {
+    core.endGroup();
+}
+exports.endGroup = endGroup;
 
 
 /***/ }),
@@ -3871,7 +3879,6 @@ const utils_1 = __webpack_require__(163);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            core.startGroup('Nexus Sync');
             const username = inputRequired('username');
             const password = inputRequired('password');
             const create = inputNotRequired('create') === 'true' ? true : false;
@@ -3882,6 +3889,7 @@ function run() {
             const dropIfFailure = inputNotRequired('drop-if-failure') === 'true' ? true : false;
             const closeTimeout = utils_1.numberValue(inputNotRequired('close-timeout'), 10);
             const release = inputNotRequired('release') === 'true' ? true : false;
+            const releaseAutoDrop = inputNotRequired('release-auto-drop') === 'false' ? false : true;
             const releaseTimeout = utils_1.numberValue(inputNotRequired('release-timeout'), 10);
             const url = inputNotRequired('url') || 'http://localhost:8082/nexus';
             const dir = inputNotRequired('dir') || 'nexus';
@@ -3900,6 +3908,7 @@ function run() {
                 closeTimeout,
                 dropIfFailure,
                 release,
+                releaseAutoDrop,
                 releaseTimeout,
                 dir,
                 nexusServer: {
@@ -3914,7 +3923,6 @@ function run() {
                 gpgSignPrivateKey: pgpSignPrivateKey
             };
             yield handler_1.handle(actionOptions);
-            core.endGroup();
         }
         catch (error) {
             core.debug(util_1.inspect(error));
@@ -51483,12 +51491,11 @@ exports.closeStagingRepo = closeStagingRepo;
  */
 function releaseStagingRepo(nexusClient, actionOptions, stagedRepositoryId) {
     return __awaiter(this, void 0, void 0, function* () {
-        const stagingProfileId = yield nexusClient.getStagingProfileId(actionOptions.stagingProfileName);
-        yield nexusClient.promoteStagingRepo(stagingProfileId, {
+        yield nexusClient.bulkPromoteStagingRepos({
             data: {
                 description: 'Release repo',
-                stagedRepositoryId,
-                targetRepositoryId: 'releases'
+                stagedRepositoryIds: [stagedRepositoryId],
+                autoDropAfterRelease: actionOptions.releaseAutoDrop
             }
         });
     });
@@ -51772,17 +51779,15 @@ class Nexus2Client {
         }));
     }
     /**
-     * Attempt to promote a staging repo and returns PromotePromoteResponse as a Promise.
+     * Promote a staging repo and returns PromotePromoteResponse as a Promise.
      *
-     * @param stagingProfileId the staging profile id
      * @param data promote promote request
      */
-    promoteStagingRepo(stagingProfileId, data) {
+    bulkPromoteStagingRepos(data) {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             this.instance
-                .post(`${this.nexusServer.url}/service/local/staging/profiles/${stagingProfileId}/promote`, data)
+                .post(`${this.nexusServer.url}/service/local/staging/bulk/promote`, data)
                 .then(r => {
-                logging_1.logInfo('promotion succeed');
                 resolve(r.data);
             })
                 .catch(e => {
@@ -51815,10 +51820,10 @@ class Nexus2Client {
      * @param repositoryId the repository id
      */
     deployByRepository(uploadFile, repositoryId) {
-        logging_1.logInfo(`create upload for ${uploadFile} and repo ${repositoryId}`);
+        logging_1.logInfo(`Upload for file ${uploadFile} and repo ${repositoryId}`);
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const stream = fs_1.default.createReadStream(uploadFile.path);
-            logging_1.logInfo(`handling file ${stream}`);
+            logging_1.logInfo(`Handling file ${uploadFile.path}`);
             this.instance
                 .put(`${this.nexusServer.url}/service/local/staging/deployByRepositoryId/${repositoryId}/${uploadFile.group}/${uploadFile.name}`, stream, {
                 headers: {
@@ -51828,11 +51833,11 @@ class Nexus2Client {
                 }
             })
                 .then(r => {
-                logging_1.logInfo(`ok ${r}`);
+                logging_1.logInfo(`OK ${uploadFile.path}`);
                 resolve();
             })
                 .catch(e => {
-                logging_1.logWarn(`error ${e}`);
+                logging_1.logWarn(`ERROR ${uploadFile.path}`);
                 reject(e);
             });
         }));
@@ -51842,7 +51847,6 @@ class Nexus2Client {
      * @param repositoryIdKey
      */
     stagingRepository(repositoryIdKey) {
-        logging_1.logInfo(`getting repository `);
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             this.instance
                 .get(`${this.nexusServer.url}/service/local/staging/repository/${repositoryIdKey}`)
@@ -52669,46 +52673,56 @@ function handle(actionOptions) {
         };
         // need to sign
         if (handlerState.needSign) {
-            logging_1.logInfo('PGP sign files');
+            logging_1.startGroup('PGP Sign');
+            logging_1.logInfo('Signing files');
             yield utils_1.generatePgpFiles(actionOptions.dir, actionOptions.gpgSignPrivateKey, actionOptions.gpgSignPassphrase);
+            logging_1.endGroup();
         }
         // need to checksum
         if (handlerState.needChecksum) {
-            logging_1.logInfo(`Generating checksum files with config ${util_1.inspect(actionOptions.generateChecksumsConfig)}`);
+            logging_1.startGroup('Checksums');
+            logging_1.logInfo(`Generation with config ${util_1.inspect(actionOptions.generateChecksumsConfig)}`);
             yield utils_1.generateChecksumFiles(actionOptions.dir, actionOptions.generateChecksumsConfig);
+            logging_1.endGroup();
         }
         // if there's a need to create a repo
         if (handlerState.needCreate) {
-            logging_1.logInfo('Creating staging repo');
+            logging_1.startGroup('Staging Repo Create');
             const stagedRepositoryId = yield nexus_utils_1.createStagingRepo(nexusClient, actionOptions);
             handlerState.stagingRepoId = stagedRepositoryId;
-            logging_1.logInfo(`Created staging repo ${stagedRepositoryId}`);
+            logging_1.logInfo(`Created repo ${stagedRepositoryId}`);
+            logging_1.endGroup();
         }
         // need to upload files
         if (handlerState.needUpload && handlerState.stagingRepoId) {
-            logging_1.logInfo('Uploading files');
+            logging_1.startGroup('File Upload');
             yield nexus_utils_1.uploadFiles(nexusClient, actionOptions.dir, handlerState.stagingRepoId);
+            logging_1.endGroup();
         }
         // need to close
         if (handlerState.needClose && handlerState.stagingRepoId) {
-            logging_1.logInfo(`Closing staging repo ${handlerState.stagingRepoId}`);
+            logging_1.startGroup('Staging Repo Close');
             yield nexus_utils_1.closeStagingRepo(nexusClient, actionOptions, handlerState.stagingRepoId);
-            logging_1.logInfo(`Closed staging repo ${handlerState.stagingRepoId}`);
+            logging_1.logInfo(`Closed repo ${handlerState.stagingRepoId}`);
             logging_1.logInfo(`Waiting repo ${handlerState.stagingRepoId} state closed`);
             yield nexus_utils_1.waitRepoState(nexusClient, handlerState.stagingRepoId, 'closed', actionOptions.closeTimeout);
+            logging_1.endGroup();
         }
         // need to release
         if (handlerState.needRelease && handlerState.stagingRepoId) {
-            logging_1.logInfo(`Releasing staging repo ${handlerState.stagingRepoId}`);
+            logging_1.startGroup('Staging Repo Release');
             yield nexus_utils_1.releaseStagingRepo(nexusClient, actionOptions, handlerState.stagingRepoId);
-            logging_1.logInfo(`Released staging repo ${handlerState.stagingRepoId}`);
+            logging_1.logInfo(`Released repo ${handlerState.stagingRepoId}`);
             logging_1.logInfo(`Waiting repo ${handlerState.stagingRepoId} state released`);
             yield nexus_utils_1.waitRepoState(nexusClient, handlerState.stagingRepoId, 'released', actionOptions.closeTimeout);
+            logging_1.endGroup();
         }
         // drop if needed
         if (handlerState.needDrop && handlerState.stagingRepoId) {
-            logging_1.logInfo(`Dropping repo ${handlerState.stagingRepoId}`);
+            logging_1.startGroup('Staging Repo Drop');
             yield nexus_utils_1.dropStagingRepo(nexusClient, handlerState.stagingRepoId);
+            logging_1.logInfo(`Dropped repo ${handlerState.stagingRepoId}`);
+            logging_1.endGroup();
         }
     });
 }
