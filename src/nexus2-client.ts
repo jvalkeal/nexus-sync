@@ -114,7 +114,6 @@ export class Nexus2Client {
       this.instance
         .post(`${this.nexusServer.url}/service/local/staging/profiles/${stagingProfileId}/promote`, data)
         .then(r => {
-          logInfo('promotion succeed');
           resolve(r.data as PromotePromoteResponse);
         })
         .catch(e => {
@@ -149,10 +148,10 @@ export class Nexus2Client {
    * @param repositoryId the repository id
    */
   public deployByRepository(uploadFile: UploadFile, repositoryId: string): Promise<void> {
-    logInfo(`create upload for ${uploadFile} and repo ${repositoryId}`);
+    logInfo(`Upload for file ${uploadFile} and repo ${repositoryId}`);
     return new Promise(async (resolve, reject) => {
       const stream = fs.createReadStream(uploadFile.path);
-      logInfo(`handling file ${stream}`);
+      logInfo(`Handling file ${uploadFile.path}`);
       this.instance
         .put(
           `${this.nexusServer.url}/service/local/staging/deployByRepositoryId/${repositoryId}/${uploadFile.group}/${uploadFile.name}`,
@@ -166,11 +165,11 @@ export class Nexus2Client {
           }
         )
         .then(r => {
-          logInfo(`ok ${r}`);
+          logInfo(`OK ${uploadFile.path}`);
           resolve();
         })
         .catch(e => {
-          logWarn(`error ${e}`);
+          logWarn(`ERROR ${uploadFile.path}`);
           reject(e);
         });
     });
@@ -181,7 +180,6 @@ export class Nexus2Client {
    * @param repositoryIdKey
    */
   public stagingRepository(repositoryIdKey: string): Promise<Repository> {
-    logInfo(`getting repository `);
     return new Promise(async (resolve, reject) => {
       this.instance
         .get(`${this.nexusServer.url}/service/local/staging/repository/${repositoryIdKey}`)

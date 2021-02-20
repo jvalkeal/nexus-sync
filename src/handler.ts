@@ -1,6 +1,6 @@
 import { inspect } from 'util';
 import { ActionOptions } from './interfaces';
-import { logInfo } from './logging';
+import { endGroup, logInfo, startGroup } from './logging';
 import {
   closeStagingRepo,
   createStagingRepo,
@@ -29,52 +29,62 @@ export async function handle(actionOptions: ActionOptions): Promise<void> {
 
   // need to sign
   if (handlerState.needSign) {
-    logInfo('PGP sign files');
+    startGroup('PGP Sign');
+    logInfo('Signing files');
     await generatePgpFiles(actionOptions.dir, actionOptions.gpgSignPrivateKey, actionOptions.gpgSignPassphrase);
+    endGroup();
   }
 
   // need to checksum
   if (handlerState.needChecksum) {
-    logInfo(`Generating checksum files with config ${inspect(actionOptions.generateChecksumsConfig)}`);
+    startGroup('Checksums');
+    logInfo(`Generation with config ${inspect(actionOptions.generateChecksumsConfig)}`);
     await generateChecksumFiles(actionOptions.dir, actionOptions.generateChecksumsConfig);
+    endGroup();
   }
 
   // if there's a need to create a repo
   if (handlerState.needCreate) {
-    logInfo('Creating staging repo');
+    startGroup('Staging Repo Create');
     const stagedRepositoryId = await createStagingRepo(nexusClient, actionOptions);
     handlerState.stagingRepoId = stagedRepositoryId;
-    logInfo(`Created staging repo ${stagedRepositoryId}`);
+    logInfo(`Created repo ${stagedRepositoryId}`);
+    endGroup();
   }
 
   // need to upload files
   if (handlerState.needUpload && handlerState.stagingRepoId) {
-    logInfo('Uploading files');
+    startGroup('File Upload');
     await uploadFiles(nexusClient, actionOptions.dir, handlerState.stagingRepoId);
+    endGroup();
   }
 
   // need to close
   if (handlerState.needClose && handlerState.stagingRepoId) {
-    logInfo(`Closing staging repo ${handlerState.stagingRepoId}`);
+    startGroup('Staging Repo Close');
     await closeStagingRepo(nexusClient, actionOptions, handlerState.stagingRepoId);
-    logInfo(`Closed staging repo ${handlerState.stagingRepoId}`);
+    logInfo(`Closed repo ${handlerState.stagingRepoId}`);
     logInfo(`Waiting repo ${handlerState.stagingRepoId} state closed`);
     await waitRepoState(nexusClient, handlerState.stagingRepoId, 'closed', actionOptions.closeTimeout);
+    endGroup();
   }
 
   // need to release
   if (handlerState.needRelease && handlerState.stagingRepoId) {
-    logInfo(`Releasing staging repo ${handlerState.stagingRepoId}`);
+    startGroup('Staging Repo Release');
     await releaseStagingRepo(nexusClient, actionOptions, handlerState.stagingRepoId);
-    logInfo(`Released staging repo ${handlerState.stagingRepoId}`);
+    logInfo(`Released repo ${handlerState.stagingRepoId}`);
     logInfo(`Waiting repo ${handlerState.stagingRepoId} state released`);
     await waitRepoState(nexusClient, handlerState.stagingRepoId, 'released', actionOptions.closeTimeout);
+    endGroup();
   }
 
   // drop if needed
   if (handlerState.needDrop && handlerState.stagingRepoId) {
-    logInfo(`Dropping repo ${handlerState.stagingRepoId}`);
+    startGroup('Staging Repo Drop');
     await dropStagingRepo(nexusClient, handlerState.stagingRepoId);
+    logInfo(`Dropped repo ${handlerState.stagingRepoId}`);
+    endGroup();
   }
 }
 

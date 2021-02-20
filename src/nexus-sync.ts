@@ -6,7 +6,6 @@ import { numberValue } from './utils';
 
 async function run() {
   try {
-    core.startGroup('Nexus Sync');
     const username = inputRequired('username');
     const password = inputRequired('password');
     const create = inputNotRequired('create') === 'true' ? true : false;
@@ -49,7 +48,6 @@ async function run() {
       gpgSignPrivateKey: pgpSignPrivateKey
     };
     await handle(actionOptions);
-    core.endGroup();
   } catch (error) {
     core.debug(inspect(error));
     core.setFailed(error.message);

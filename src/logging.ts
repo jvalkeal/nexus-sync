@@ -15,3 +15,11 @@ export function logInfo(message: string) {
 export function logDebug(message: string) {
   core.debug(message);
 }
+
+export function startGroup(group: string) {
+  core.startGroup(group);
+}
+
+export function endGroup() {
+  core.endGroup();
+}
