@@ -1,11 +1,11 @@
 import fs from 'fs';
 import glob from 'glob';
 import path from 'path';
-import crypto, { getHashes } from 'crypto';
+import stream from 'stream';
+import * as openpgp from 'openpgp';
+import crypto from 'crypto';
 import { GenerateChecksum, UploadFile } from './interfaces';
 import { logInfo } from './logging';
-import { has } from 'lodash';
-import { stringify } from 'querystring';
 
 /**
  * Find files from a base directory to get uploaded by automatically
@@ -15,7 +15,7 @@ import { stringify } from 'querystring';
  */
 export async function findFiles(baseDir: string): Promise<UploadFile[]> {
   return new Promise((resolve, reject) => {
-    glob(baseDir + '/**/!(*.asc)', (error, files) => {
+    glob(baseDir + '/**/*', (error, files) => {
       if (error) {
         reject(error);
         return;
@@ -81,6 +81,7 @@ export async function generateChecksumFiles(baseDir: string, config: GenerateChe
           const p = createCheckSums(path, config).then(res => {
             res.forEach((digest, type) => {
               const dpath = `${path}.${type}`;
+              logInfo(`Writing ${dpath}`);
               fs.writeFileSync(dpath, digest);
             });
           });
@@ -119,4 +120,52 @@ export function numberValue(value: number | string | undefined, defaultValue: nu
  */
 export function delayPromise(millis: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, millis));
+}
+
+export async function generatePgpFiles(baseDir: string, privateKeyArmored: string, passphrase: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    glob(baseDir + '/**/!(*.asc)', (error, files) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      let all: Promise<void>[] = [];
+      files.forEach(path => {
+        const stat = fs.lstatSync(path);
+        if (stat.isFile()) {
+          const p = pgpSign(path, privateKeyArmored, passphrase).then(sig => {
+            const dpath = `${path}.asc`;
+            logInfo(`Writing ${dpath}`);
+            fs.writeFileSync(dpath, sig);
+          });
+          all.push(p);
+        }
+      });
+      resolve(Promise.all(all).then());
+    });
+  });
+}
+
+export async function pgpSign(path: string, privateKeyArmored: string, passphrase: string): Promise<string> {
+  const stream = fs.createReadStream(path);
+  const message = openpgp.message.fromBinary(stream);
+  const privKeyObj = (await openpgp.key.readArmored(privateKeyArmored)).keys[0];
+  await privKeyObj.decrypt(passphrase);
+  const options = {
+    message,
+    privateKeys: [privKeyObj],
+    detached: true
+  };
+  const signResult = await openpgp.sign(options);
+  const resultStream: stream = signResult.signature;
+  return streamToString(resultStream);
+}
+
+function streamToString(stream: stream): Promise<string> {
+  const chunks: Uint8Array[] = [];
+  return new Promise<string>((resolve, reject) => {
+    stream.on('data', chunk => chunks.push(chunk));
+    stream.on('error', reject);
+    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+  });
 }

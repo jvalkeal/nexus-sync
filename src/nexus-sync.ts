@@ -9,20 +9,31 @@ async function run() {
     core.startGroup('Nexus Sync');
     const username = inputRequired('username');
     const password = inputRequired('password');
+    const create = inputNotRequired('create') === 'true' ? true : false;
     const stagingProfileName = inputRequired('staging-profile-name');
-    const close = inputNotRequired('close') === 'false' ? false : true;
+    const stagingRepoId = inputNotRequired('staging-repo-id') || undefined;
+    const upload = inputNotRequired('upload') === 'true' ? true : false;
+    const close = inputNotRequired('close') === 'true' ? true : false;
+    const dropIfFailure = inputNotRequired('drop-if-failure') === 'true' ? true : false;
     const closeTimeout = numberValue(inputNotRequired('close-timeout'), 10);
-    const release = inputNotRequired('release') === 'false' ? false : true;
+    const release = inputNotRequired('release') === 'true' ? true : false;
     const releaseTimeout = numberValue(inputNotRequired('release-timeout'), 10);
     const url = inputNotRequired('url') || 'http://localhost:8082/nexus';
     const dir = inputNotRequired('dir') || 'nexus';
     const generateChecksums = inputNotRequired('generate-checksums') === 'true' ? true : false;
     const generateChecksumsConfigData = inputNotRequired('generate-checksums-config') || '[]';
     const generateChecksumsConfig: GenerateChecksum[] = JSON.parse(generateChecksumsConfigData);
+    const pgpSign = inputNotRequired('pgp-sign') === 'true' ? true : false;
+    const pgpSignPrivateKey = inputNotRequired('pgp-sign-private-key');
+    const pgpSignPassphrase = inputNotRequired('pgp-sign-passphrase');
     const actionOptions: ActionOptions = {
+      create,
       stagingProfileName,
+      stagingRepoId,
+      upload,
       close,
       closeTimeout,
+      dropIfFailure,
       release,
       releaseTimeout,
       dir,
@@ -32,7 +43,10 @@ async function run() {
         url
       },
       generateChecksums,
-      generateChecksumsConfig
+      generateChecksumsConfig,
+      gpgSign: pgpSign,
+      gpgSignPassphrase: pgpSignPassphrase,
+      gpgSignPrivateKey: pgpSignPrivateKey
     };
     await handle(actionOptions);
     core.endGroup();

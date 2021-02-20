@@ -8,29 +8,50 @@ inputs:
   password:
     description: 'Nexus password'
     required: true
+  create:
+    description: 'Automatically create repository, defaults to "false".'
+    required: false
   staging-profile-name:
     description: 'Nexus Staging Profile Name'
     required: true
+  staging-repo-id:
+    description: 'Nexus Staging Repo id'
+    required: false
   close:
-    description: 'Automatically close repository, defaults to "true". Set to false if you want to handle operations manually.'
+    description: 'Automatically close repository, defaults to "false".'
+    required: false
+  drop-if-failure:
+    description: 'Automatically drop repository, defaults to "false".'
     required: false
   close-timeout:
     description: 'How long to wait before bailing out to wait slow nexus close operation, defaults to "10 minutes"'
     required: false
   release:
-    description: 'Automatically release repository, defaults to "true". Set to false if you want to handle operations manually.'
+    description: 'Automatically release repository, defaults to "false".'
     required: false
   release-timeout:
     description: 'How long to wait before bailing out to wait slow nexus release operation, defaults to "10 minutes"'
     required: false
   generate-checksums:
-    description: 'Generate checksums, defaults to "false'
+    description: 'Generate checksums, defaults to "false"'
     required: false
   generate-checksums-config:
     description: 'Config to generate checksum files.'
     required: false
+  pgp-sign:
+    description: 'Sign files, defaults to "false"'
+    required: false
+  pgp-sign-private-key:
+    description: 'PGP private key as ascii armored'
+    required: false
+  pgp-sign-passphrase:
+    description: 'PGP private key passphrase'
+    required: false
   url:
     description: 'Base Nexus url, defaults to "http://localhost:8082/nexus"'
+    required: false
+  upload:
+    description: 'Upload files, defaults to "false".'
     required: false
   dir:
     description: 'Base directory for files to sync, defaults to "nexus"'

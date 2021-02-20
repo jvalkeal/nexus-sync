@@ -1,9 +1,14 @@
 # Ignore node_modules, ncc is used to compile nodejs modules into a single file
-node_modules/
+# https://github.com/vercel/ncc/issues/538
+/node_modules/*
+!/node_modules/asn1.js/
+!/node_modules/bn.js/
+!/node_modules/inherits/
+!/node_modules/safer-buffer/
+!/node_modules/minimalistic-assert/
 __tests__/runnerg/*
 
-# Ignore js files that are transpiled from ts files in src/
-lib/
+
 
 # Rest of the file pulled from https://github.com/github/gitignore/blob/master/Node.gitignore
 # Logs
@@ -100,4 +105,5 @@ test/data/nexus/org/example/*.md5
 test/data/nexus/org/example/*.sha1
 test/data/nexus/org/example/*.sha256
 test/data/nexus/org/example/*.sha512
+
 

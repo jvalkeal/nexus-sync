@@ -1,5 +1,6 @@
 import fs from 'fs';
-import { findFiles, generateChecksumFiles, createCheckSums } from '../src/utils';
+import { findFiles, generateChecksumFiles, createCheckSums, pgpSign } from '../src/utils';
+import { TEST_PRIVATE_KEY } from './data/mock-data';
 
 describe('utils.ts', () => {
   function deleteFile(path: string) {
@@ -21,9 +22,11 @@ describe('utils.ts', () => {
 
   it('should resolve correct files', async () => {
     const uploadFiles = await findFiles('test/data/nexus');
-    expect(uploadFiles.length).toBe(1);
+    expect(uploadFiles.length).toBe(2);
     expect(uploadFiles[0].name).toBe('test.txt');
     expect(uploadFiles[0].group).toBe('org%2Fexample');
+    expect(uploadFiles[1].name).toBe('test.txt.asc');
+    expect(uploadFiles[1].group).toBe('org%2Fexample');
   });
 
   it('should create checksums', async () => {
@@ -57,5 +60,11 @@ describe('utils.ts', () => {
     expect(fs.existsSync('test/data/nexus/org/example/test.txt.sha1')).toBe(true);
     expect(fs.existsSync('test/data/nexus/org/example/test.txt.sha256')).toBe(true);
     expect(fs.existsSync('test/data/nexus/org/example/test.txt.sha512')).toBe(true);
+  });
+
+  it('should generate pgp signature', async () => {
+    const sig = await pgpSign('test/data/nexus/org/example/test.txt', TEST_PRIVATE_KEY, 'gpgtest');
+    // just check that we get something
+    expect(sig).not.toBeNull();
   });
 });

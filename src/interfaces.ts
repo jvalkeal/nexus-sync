@@ -107,15 +107,22 @@ export interface GenerateChecksum {
  * Options for action to ease passing those around.
  */
 export interface ActionOptions {
+  create: boolean;
   stagingProfileName: string;
+  stagingRepoId: string | undefined;
+  upload: boolean;
   close: boolean;
   closeTimeout: number;
+  dropIfFailure: boolean;
   release: boolean;
   releaseTimeout: number;
   dir: string;
   nexusServer: NexusServer;
   generateChecksums: boolean;
   generateChecksumsConfig: GenerateChecksum[];
+  gpgSign: boolean;
+  gpgSignPassphrase: string;
+  gpgSignPrivateKey: string;
 }
 
 export interface Repository {
