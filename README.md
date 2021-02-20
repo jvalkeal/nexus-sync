@@ -20,6 +20,7 @@
 | `drop-if-failure`           | Automatically drop repository, defaults to "false".                                                | Optional |
 | `close-timeout`             | How long to wait before bailing out to wait slow nexus close operation, defaults to "10 minutes"   | Optional |
 | `release`                   | Automatically release repository, defaults to "false".                                             | Optional |
+| `release-auto-drop`         | Drop repo after release, defaults to "true".                                                       | Optional |
 | `release-timeout`           | How long to wait before bailing out to wait slow nexus release operation, defaults to "10 minutes" | Optional |
 | `generate-checksums`        | Generate checksums, defaults to "false"                                                            | Optional |
 | `generate-checksums-config` | Config to generate checksum files.                                                                 | Optional |

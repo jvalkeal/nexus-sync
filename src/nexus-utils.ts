@@ -52,12 +52,11 @@ export async function releaseStagingRepo(
   actionOptions: ActionOptions,
   stagedRepositoryId: string
 ): Promise<void> {
-  const stagingProfileId = await nexusClient.getStagingProfileId(actionOptions.stagingProfileName);
-  await nexusClient.promoteStagingRepo(stagingProfileId, {
+  await nexusClient.bulkPromoteStagingRepos({
     data: {
       description: 'Release repo',
-      stagedRepositoryId,
-      targetRepositoryId: 'releases'
+      stagedRepositoryIds: [stagedRepositoryId],
+      autoDropAfterRelease: actionOptions.releaseAutoDrop
     }
   });
 }

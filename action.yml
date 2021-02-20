@@ -29,6 +29,9 @@ inputs:
   release:
     description: 'Automatically release repository, defaults to "false".'
     required: false
+  release-auto-drop:
+    description: 'Drop repo after release, defaults to "true".'
+    required: false
   release-timeout:
     description: 'How long to wait before bailing out to wait slow nexus release operation, defaults to "10 minutes"'
     required: false

@@ -9,11 +9,11 @@ import {
   PromoteStartResponse,
   PromoteDropRequest,
   PromoteDropResponse,
-  PromotePromoteRequest,
-  PromotePromoteResponse,
   StagingProfilesResponse,
   UploadFile,
-  Repository
+  Repository,
+  BulkPromoteRequest,
+  BulkPromoteResponse
 } from './interfaces';
 import { logInfo, logWarn } from './logging';
 
@@ -104,17 +104,16 @@ export class Nexus2Client {
   }
 
   /**
-   * Attempt to promote a staging repo and returns PromotePromoteResponse as a Promise.
+   * Promote a staging repo and returns PromotePromoteResponse as a Promise.
    *
-   * @param stagingProfileId the staging profile id
    * @param data promote promote request
    */
-  public promoteStagingRepo(stagingProfileId: string, data: PromotePromoteRequest): Promise<PromotePromoteResponse> {
+  public bulkPromoteStagingRepos(data: BulkPromoteRequest): Promise<BulkPromoteResponse> {
     return new Promise(async (resolve, reject) => {
       this.instance
-        .post(`${this.nexusServer.url}/service/local/staging/profiles/${stagingProfileId}/promote`, data)
+        .post(`${this.nexusServer.url}/service/local/staging/bulk/promote`, data)
         .then(r => {
-          resolve(r.data as PromotePromoteResponse);
+          resolve(r.data as BulkPromoteResponse);
         })
         .catch(e => {
           reject(e);

@@ -16,6 +16,7 @@ async function run() {
     const dropIfFailure = inputNotRequired('drop-if-failure') === 'true' ? true : false;
     const closeTimeout = numberValue(inputNotRequired('close-timeout'), 10);
     const release = inputNotRequired('release') === 'true' ? true : false;
+    const releaseAutoDrop = inputNotRequired('release-auto-drop') === 'false' ? false : true;
     const releaseTimeout = numberValue(inputNotRequired('release-timeout'), 10);
     const url = inputNotRequired('url') || 'http://localhost:8082/nexus';
     const dir = inputNotRequired('dir') || 'nexus';
@@ -34,6 +35,7 @@ async function run() {
       closeTimeout,
       dropIfFailure,
       release,
+      releaseAutoDrop,
       releaseTimeout,
       dir,
       nexusServer: {

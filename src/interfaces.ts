@@ -58,20 +58,20 @@ export interface PromoteFinishRequest {
 export interface PromoteFinishResponse extends ErrorResponse {}
 
 /**
- * Promote staging repo needs staging repo id, target repo is and optional description.
+ * Bulk promote staging repo needs staging repo id, target repo is and optional description.
  */
-export interface PromotePromoteRequest {
+export interface BulkPromoteRequest {
   data: {
-    stagedRepositoryId: string;
-    targetRepositoryId?: string;
+    stagedRepositoryIds: string[];
+    autoDropAfterRelease: boolean;
     description: string;
   };
 }
 
 /**
- * Promote a staging repo will not return data unless there were errors.
+ * Bulk promote a staging repos will not return data unless there were errors.
  */
-export interface PromotePromoteResponse extends ErrorResponse {}
+export interface BulkPromoteResponse extends ErrorResponse {}
 
 /**
  * Drop staging repo needs staging repo id, target repo is and optional description.
@@ -115,6 +115,7 @@ export interface ActionOptions {
   closeTimeout: number;
   dropIfFailure: boolean;
   release: boolean;
+  releaseAutoDrop: boolean;
   releaseTimeout: number;
   dir: string;
   nexusServer: NexusServer;

@@ -1,6 +1,7 @@
 import nock from 'nock';
+import lodash from 'lodash';
 import { Nexus2Client } from '../src/nexus2-client';
-import { UploadFile } from '../src/interfaces';
+import { BulkPromoteRequest, UploadFile } from '../src/interfaces';
 import { STAGING_PROFILES_1 } from './data/mock-data';
 
 describe('nexus2-client tests', () => {
@@ -32,5 +33,49 @@ describe('nexus2-client tests', () => {
       group: 'org%2Fexample'
     };
     await client.deployByRepository(uploadFile, 'fake');
+  });
+
+  it('should bulk promote and drop', async () => {
+    nock('http://localhost:8082')
+      .post('/nexus/service/local/staging/bulk/promote', body => {
+        return lodash.isMatch(body, {
+          data: {
+            description: 'desc',
+            stagedRepositoryIds: ['test'],
+            autoDropAfterRelease: true
+          }
+        });
+      })
+      .reply(201);
+    const request: BulkPromoteRequest = {
+      data: {
+        description: 'desc',
+        stagedRepositoryIds: ['test'],
+        autoDropAfterRelease: true
+      }
+    };
+    await client.bulkPromoteStagingRepos(request);
+  });
+
+  it('should bulk promote and not drop', async () => {
+    nock('http://localhost:8082')
+      .post('/nexus/service/local/staging/bulk/promote', body => {
+        return lodash.isMatch(body, {
+          data: {
+            description: 'desc',
+            stagedRepositoryIds: ['test'],
+            autoDropAfterRelease: false
+          }
+        });
+      })
+      .reply(201);
+    const request: BulkPromoteRequest = {
+      data: {
+        description: 'desc',
+        stagedRepositoryIds: ['test'],
+        autoDropAfterRelease: false
+      }
+    };
+    await client.bulkPromoteStagingRepos(request);
   });
 });
