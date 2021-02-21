@@ -38,7 +38,7 @@ On default this action really does nothing unless needed configs are
 in place.
 
 This normal example of an action does:
-- Takes everything= under base directory _nexus_
+- Takes everything under base directory _nexus_
 - PGP sign files
 - Create _md5_ and _sha_ checksums
 - Creates a stating repo
