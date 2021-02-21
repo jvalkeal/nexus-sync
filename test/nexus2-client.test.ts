@@ -2,7 +2,7 @@ import nock from 'nock';
 import lodash from 'lodash';
 import { Nexus2Client } from '../src/nexus2-client';
 import { BulkPromoteRequest, UploadFile } from '../src/interfaces';
-import { STAGING_PROFILES_1 } from './data/mock-data';
+import { STAGING_PROFILES_1, ERROR_NO_REPO_1, REPOSITORY_1 } from './data/mock-data';
 
 describe('nexus2-client tests', () => {
   let client: Nexus2Client;
@@ -21,6 +21,21 @@ describe('nexus2-client tests', () => {
       .reply(200, STAGING_PROFILES_1);
     const id = await client.getStagingProfileId('test');
     expect(id).toBe('2e32338b1a152');
+  });
+
+  it('should return repository', async () => {
+    nock('http://localhost:8082')
+      .get('/nexus/service/local/staging/repository/fake')
+      .reply(200, REPOSITORY_1);
+    const repository = await client.stagingRepository('fake');
+    expect(repository.type).toBe('open');
+  });
+
+  it('should return error with no repo', async () => {
+    nock('http://localhost:8082')
+      .get('/nexus/service/local/staging/repository/fake')
+      .reply(404, ERROR_NO_REPO_1);
+    await expect(client.stagingRepository('fake')).rejects.toThrow();
   });
 
   it('should upload file into repository', async () => {

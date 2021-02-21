@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import { Nexus2Client } from './nexus2-client';
-import { ActionOptions, Activity, PromoteStartRequest } from './interfaces';
+import { ActionOptions, Activity, PromoteStartRequest, Repository } from './interfaces';
 import { findFiles, delayPromise } from './utils';
 import { logDebug, logInfo } from './logging';
 
@@ -98,19 +98,34 @@ export async function waitRepoState(
     let now = Date.now();
     const until = now + timeout;
     logDebug(`Waiting until ${new Date(until)} from now ${new Date(now)}`);
+    let seenRepo = false;
     while (until > now) {
-      const repository = await nexusClient.stagingRepository(repositoryIdKey);
-      logInfo(`Repo state ${repository.type}`);
-      if (repository.type === state) {
-        resolve();
-        return;
+      // when repo goes away, i.e. with auto-drop, underlying rest call
+      // will return 404, so don't throw if we've seen repo being there
+      // first time and then assume it's state is ok.
+      let repository: Repository | undefined;
+      try {
+        repository = await nexusClient.stagingRepository(repositoryIdKey);
+        seenRepo = true;
+      } catch (error) {
+        if (error.response.status === 404 && seenRepo) {
+          resolve();
+          return;
+        }
       }
-      if (repository.notifications > 0) {
-        reject(new Error(`Last operation failed with ${repository.notifications} notifications`));
-        return;
+      if (repository) {
+        logInfo(`Repo state ${repository.type}`);
+        if (repository && repository.type === state) {
+          resolve();
+          return;
+        }
+        if (repository.notifications > 0) {
+          reject(new Error(`Last operation failed with ${repository.notifications} notifications`));
+          return;
+        }
+        await delayPromise(sleep);
+        now = Date.now();
       }
-      await delayPromise(sleep);
-      now = Date.now();
     }
     reject(new Error('Timeout waiting state'));
   });

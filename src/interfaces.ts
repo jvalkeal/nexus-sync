@@ -126,7 +126,7 @@ export interface ActionOptions {
   gpgSignPrivateKey: string;
 }
 
-export interface Repository {
+export interface Repository extends ErrorResponse {
   notifications: number;
   type: string;
 }

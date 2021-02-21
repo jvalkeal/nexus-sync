@@ -216,6 +216,18 @@ export const ACTIVITY_1 =
 ]
 `;
 
+export const ERROR_NO_REPO_1 =
+`
+{
+  "errors": [
+      {
+          "id": "*",
+          "msg": "No such repository: fake"
+      }
+  ]
+}
+`;
+
 //
 // $ gpg --list-keys
 //
