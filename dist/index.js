@@ -3875,6 +3875,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 const util_1 = __webpack_require__(669);
 const handler_1 = __webpack_require__(895);
+const logging_1 = __webpack_require__(71);
 const utils_1 = __webpack_require__(163);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -3887,10 +3888,10 @@ function run() {
             const upload = inputNotRequired('upload') === 'true' ? true : false;
             const close = inputNotRequired('close') === 'true' ? true : false;
             const dropIfFailure = inputNotRequired('drop-if-failure') === 'true' ? true : false;
-            const closeTimeout = utils_1.numberValue(inputNotRequired('close-timeout'), 10);
+            const closeTimeout = utils_1.numberValue(inputNotRequired('close-timeout'), 600);
             const release = inputNotRequired('release') === 'true' ? true : false;
             const releaseAutoDrop = inputNotRequired('release-auto-drop') === 'false' ? false : true;
-            const releaseTimeout = utils_1.numberValue(inputNotRequired('release-timeout'), 10);
+            const releaseTimeout = utils_1.numberValue(inputNotRequired('release-timeout'), 600);
             const url = inputNotRequired('url') || 'http://localhost:8082/nexus';
             const dir = inputNotRequired('dir') || 'nexus';
             const generateChecksums = inputNotRequired('generate-checksums') === 'true' ? true : false;
@@ -3905,11 +3906,11 @@ function run() {
                 stagingRepoId,
                 upload,
                 close,
-                closeTimeout,
+                closeTimeout: closeTimeout * 1000,
                 dropIfFailure,
                 release,
                 releaseAutoDrop,
-                releaseTimeout,
+                releaseTimeout: releaseTimeout * 1000,
                 dir,
                 nexusServer: {
                     username,
@@ -3925,7 +3926,7 @@ function run() {
             yield handler_1.handle(actionOptions);
         }
         catch (error) {
-            core.debug(util_1.inspect(error));
+            logging_1.logDebug(util_1.inspect(error));
             core.setFailed(error.message);
         }
     });
@@ -51440,9 +51441,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.waitRepoState = exports.dropStagingRepo = exports.releaseStagingRepo = exports.closeStagingRepo = exports.uploadFiles = exports.createStagingRepo = void 0;
+exports.waitRepoState = exports.stagingRepositoryActivity = exports.dropStagingRepo = exports.releaseStagingRepo = exports.closeStagingRepo = exports.uploadFiles = exports.createStagingRepo = void 0;
 const core = __importStar(__webpack_require__(470));
 const utils_1 = __webpack_require__(163);
+const logging_1 = __webpack_require__(71);
 /**
  * Create a staging repo and return its id for furher operations.
  */
@@ -51515,18 +51517,40 @@ function dropStagingRepo(nexusClient, stagedRepositoryId) {
     });
 }
 exports.dropStagingRepo = dropStagingRepo;
-function waitRepoState(nexusClient, repositoryIdKey, state, timeout) {
+/**
+ * Get repo activity.
+ */
+function stagingRepositoryActivity(nexusClient, stagedRepositoryId) {
     return __awaiter(this, void 0, void 0, function* () {
-        let now = Date.now();
-        const until = now + timeout * 1000;
-        while (until > now) {
-            const repository = yield nexusClient.stagingRepository(repositoryIdKey);
-            if (repository.type === state) {
-                return;
+        return yield nexusClient.stagingRepositoryActivity(stagedRepositoryId);
+    });
+}
+exports.stagingRepositoryActivity = stagingRepositoryActivity;
+/**
+ * Wait with a given timeout for a repo state.
+ */
+function waitRepoState(nexusClient, repositoryIdKey, state, timeout, sleep = 10000) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            let now = Date.now();
+            const until = now + timeout;
+            logging_1.logDebug(`Waiting until ${new Date(until)} from now ${new Date(now)}`);
+            while (until > now) {
+                const repository = yield nexusClient.stagingRepository(repositoryIdKey);
+                logging_1.logInfo(`Repo state ${repository.type}`);
+                if (repository.type === state) {
+                    resolve();
+                    return;
+                }
+                if (repository.notifications > 0) {
+                    reject(new Error(`Last operation failed with ${repository.notifications} notifications`));
+                    return;
+                }
+                yield utils_1.delayPromise(sleep);
+                now = Date.now();
             }
-            yield utils_1.delayPromise(10000);
-            now = Date.now();
-        }
+            reject(new Error('Timeout waiting state'));
+        }));
     });
 }
 exports.waitRepoState = waitRepoState;
@@ -51820,7 +51844,7 @@ class Nexus2Client {
      * @param repositoryId the repository id
      */
     deployByRepository(uploadFile, repositoryId) {
-        logging_1.logInfo(`Upload for file ${uploadFile} and repo ${repositoryId}`);
+        logging_1.logInfo(`Upload for file ${uploadFile.path} and repo ${repositoryId}`);
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const stream = fs_1.default.createReadStream(uploadFile.path);
             logging_1.logInfo(`Handling file ${uploadFile.path}`);
@@ -51843,6 +51867,7 @@ class Nexus2Client {
         }));
     }
     /**
+     * Get info about a repository. Mostly used by tracking repository states.
      *
      * @param repositoryIdKey
      */
@@ -51850,6 +51875,23 @@ class Nexus2Client {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             this.instance
                 .get(`${this.nexusServer.url}/service/local/staging/repository/${repositoryIdKey}`)
+                .then(r => {
+                resolve(r.data);
+            })
+                .catch(e => {
+                reject(e);
+            });
+        }));
+    }
+    /**
+     * Get info about a repository. Mostly used by tracking repository states.
+     *
+     * @param repositoryIdKey
+     */
+    stagingRepositoryActivity(repositoryIdKey) {
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            this.instance
+                .get(`${this.nexusServer.url}/service/local/staging/repository/${repositoryIdKey}/activity`)
                 .then(r => {
                 resolve(r.data);
             })
@@ -52705,7 +52747,16 @@ function handle(actionOptions) {
             yield nexus_utils_1.closeStagingRepo(nexusClient, actionOptions, handlerState.stagingRepoId);
             logging_1.logInfo(`Closed repo ${handlerState.stagingRepoId}`);
             logging_1.logInfo(`Waiting repo ${handlerState.stagingRepoId} state closed`);
-            yield nexus_utils_1.waitRepoState(nexusClient, handlerState.stagingRepoId, 'closed', actionOptions.closeTimeout);
+            try {
+                yield nexus_utils_1.waitRepoState(nexusClient, handlerState.stagingRepoId, 'closed', actionOptions.closeTimeout);
+            }
+            catch (error) {
+                yield logActivity(nexusClient, handlerState.stagingRepoId);
+                if (handlerState.needDrop) {
+                    yield dropRepo(nexusClient, handlerState.stagingRepoId);
+                }
+                throw error;
+            }
             logging_1.endGroup();
         }
         // need to release
@@ -52714,19 +52765,43 @@ function handle(actionOptions) {
             yield nexus_utils_1.releaseStagingRepo(nexusClient, actionOptions, handlerState.stagingRepoId);
             logging_1.logInfo(`Released repo ${handlerState.stagingRepoId}`);
             logging_1.logInfo(`Waiting repo ${handlerState.stagingRepoId} state released`);
-            yield nexus_utils_1.waitRepoState(nexusClient, handlerState.stagingRepoId, 'released', actionOptions.closeTimeout);
+            try {
+                yield nexus_utils_1.waitRepoState(nexusClient, handlerState.stagingRepoId, 'released', actionOptions.releaseTimeout);
+            }
+            catch (error) {
+                yield logActivity(nexusClient, handlerState.stagingRepoId);
+                throw error;
+            }
             logging_1.endGroup();
         }
         // drop if needed
-        if (handlerState.needDrop && handlerState.stagingRepoId) {
-            logging_1.startGroup('Staging Repo Drop');
-            yield nexus_utils_1.dropStagingRepo(nexusClient, handlerState.stagingRepoId);
-            logging_1.logInfo(`Dropped repo ${handlerState.stagingRepoId}`);
-            logging_1.endGroup();
-        }
+        // if (handlerState.needDrop && handlerState.stagingRepoId) {
+        //   startGroup('Staging Repo Drop');
+        //   await dropStagingRepo(nexusClient, handlerState.stagingRepoId);
+        //   logInfo(`Dropped repo ${handlerState.stagingRepoId}`);
+        //   endGroup();
+        // }
     });
 }
 exports.handle = handle;
+function logActivity(nexusClient, stagingRepoId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const activities = yield nexus_utils_1.stagingRepositoryActivity(nexusClient, stagingRepoId);
+            logging_1.logWarn(`Repo activities ${util_1.inspect(activities, false, 10)}`);
+        }
+        catch (error) { }
+    });
+}
+function dropRepo(nexusClient, stagingRepoId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            logging_1.logInfo(`Dropping repo ${stagingRepoId}`);
+            yield nexus_utils_1.dropStagingRepo(nexusClient, stagingRepoId);
+        }
+        catch (error) { }
+    });
+}
 
 
 /***/ }),
