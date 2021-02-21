@@ -1,7 +1,8 @@
 import * as core from '@actions/core';
 import { Nexus2Client } from './nexus2-client';
-import { ActionOptions, PromoteStartRequest } from './interfaces';
+import { ActionOptions, Activity, PromoteStartRequest } from './interfaces';
 import { findFiles, delayPromise } from './utils';
+import { logDebug, logInfo } from './logging';
 
 /**
  * Create a staging repo and return its id for furher operations.
@@ -73,21 +74,44 @@ export async function dropStagingRepo(nexusClient: Nexus2Client, stagedRepositor
   });
 }
 
+/**
+ * Get repo activity.
+ */
+export async function stagingRepositoryActivity(
+  nexusClient: Nexus2Client,
+  stagedRepositoryId: string
+): Promise<Activity[]> {
+  return await nexusClient.stagingRepositoryActivity(stagedRepositoryId);
+}
+
+/**
+ * Wait with a given timeout for a repo state.
+ */
 export async function waitRepoState(
   nexusClient: Nexus2Client,
   repositoryIdKey: string,
   state: string,
-  timeout: number
+  timeout: number,
+  sleep: number = 10000
 ): Promise<void> {
-  let now = Date.now();
-  const until = now + timeout * 1000;
-
-  while (until > now) {
-    const repository = await nexusClient.stagingRepository(repositoryIdKey);
-    if (repository.type === state) {
-      return;
+  return new Promise(async (resolve, reject) => {
+    let now = Date.now();
+    const until = now + timeout;
+    logDebug(`Waiting until ${new Date(until)} from now ${new Date(now)}`);
+    while (until > now) {
+      const repository = await nexusClient.stagingRepository(repositoryIdKey);
+      logInfo(`Repo state ${repository.type}`);
+      if (repository.type === state) {
+        resolve();
+        return;
+      }
+      if (repository.notifications > 0) {
+        reject(new Error(`Last operation failed with ${repository.notifications} notifications`));
+        return;
+      }
+      await delayPromise(sleep);
+      now = Date.now();
     }
-    await delayPromise(10000);
-    now = Date.now();
-  }
+    reject(new Error('Timeout waiting state'));
+  });
 }

@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import { inspect } from 'util';
 import { handle } from './handler';
 import { ActionOptions, GenerateChecksum } from './interfaces';
+import { logDebug } from './logging';
 import { numberValue } from './utils';
 
 async function run() {
@@ -14,10 +15,10 @@ async function run() {
     const upload = inputNotRequired('upload') === 'true' ? true : false;
     const close = inputNotRequired('close') === 'true' ? true : false;
     const dropIfFailure = inputNotRequired('drop-if-failure') === 'true' ? true : false;
-    const closeTimeout = numberValue(inputNotRequired('close-timeout'), 10);
+    const closeTimeout = numberValue(inputNotRequired('close-timeout'), 600);
     const release = inputNotRequired('release') === 'true' ? true : false;
     const releaseAutoDrop = inputNotRequired('release-auto-drop') === 'false' ? false : true;
-    const releaseTimeout = numberValue(inputNotRequired('release-timeout'), 10);
+    const releaseTimeout = numberValue(inputNotRequired('release-timeout'), 600);
     const url = inputNotRequired('url') || 'http://localhost:8082/nexus';
     const dir = inputNotRequired('dir') || 'nexus';
     const generateChecksums = inputNotRequired('generate-checksums') === 'true' ? true : false;
@@ -32,11 +33,11 @@ async function run() {
       stagingRepoId,
       upload,
       close,
-      closeTimeout,
+      closeTimeout: closeTimeout * 1000,
       dropIfFailure,
       release,
       releaseAutoDrop,
-      releaseTimeout,
+      releaseTimeout: releaseTimeout * 1000,
       dir,
       nexusServer: {
         username,
@@ -51,7 +52,7 @@ async function run() {
     };
     await handle(actionOptions);
   } catch (error) {
-    core.debug(inspect(error));
+    logDebug(inspect(error));
     core.setFailed(error.message);
   }
 }

@@ -127,7 +127,20 @@ export interface ActionOptions {
 }
 
 export interface Repository {
+  notifications: number;
   type: string;
+}
+
+export interface Activity {
+  events: Event[];
+  name: string;
+  started: string;
+  stopped: string;
+}
+
+export interface Event {
+  name: string;
+  properties: Map<string, string>;
 }
 
 /**

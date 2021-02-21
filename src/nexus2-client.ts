@@ -13,7 +13,8 @@ import {
   UploadFile,
   Repository,
   BulkPromoteRequest,
-  BulkPromoteResponse
+  BulkPromoteResponse,
+  Activity
 } from './interfaces';
 import { logInfo, logWarn } from './logging';
 
@@ -147,7 +148,7 @@ export class Nexus2Client {
    * @param repositoryId the repository id
    */
   public deployByRepository(uploadFile: UploadFile, repositoryId: string): Promise<void> {
-    logInfo(`Upload for file ${uploadFile} and repo ${repositoryId}`);
+    logInfo(`Upload for file ${uploadFile.path} and repo ${repositoryId}`);
     return new Promise(async (resolve, reject) => {
       const stream = fs.createReadStream(uploadFile.path);
       logInfo(`Handling file ${uploadFile.path}`);
@@ -175,6 +176,7 @@ export class Nexus2Client {
   }
 
   /**
+   * Get info about a repository. Mostly used by tracking repository states.
    *
    * @param repositoryIdKey
    */
@@ -184,6 +186,24 @@ export class Nexus2Client {
         .get(`${this.nexusServer.url}/service/local/staging/repository/${repositoryIdKey}`)
         .then(r => {
           resolve(r.data as Repository);
+        })
+        .catch(e => {
+          reject(e);
+        });
+    });
+  }
+
+  /**
+   * Get info about a repository. Mostly used by tracking repository states.
+   *
+   * @param repositoryIdKey
+   */
+  public stagingRepositoryActivity(repositoryIdKey: string): Promise<Activity[]> {
+    return new Promise(async (resolve, reject) => {
+      this.instance
+        .get<Activity[]>(`${this.nexusServer.url}/service/local/staging/repository/${repositoryIdKey}/activity`)
+        .then(r => {
+          resolve(r.data);
         })
         .catch(e => {
           reject(e);

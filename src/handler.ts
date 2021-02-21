@@ -1,13 +1,14 @@
 import { inspect } from 'util';
 import { ActionOptions } from './interfaces';
-import { endGroup, logInfo, startGroup } from './logging';
+import { endGroup, logInfo, logWarn, startGroup } from './logging';
 import {
   closeStagingRepo,
   createStagingRepo,
   dropStagingRepo,
   releaseStagingRepo,
   uploadFiles,
-  waitRepoState
+  waitRepoState,
+  stagingRepositoryActivity
 } from './nexus-utils';
 import { Nexus2Client } from './nexus2-client';
 import { generateChecksumFiles, generatePgpFiles } from './utils';
@@ -65,7 +66,12 @@ export async function handle(actionOptions: ActionOptions): Promise<void> {
     await closeStagingRepo(nexusClient, actionOptions, handlerState.stagingRepoId);
     logInfo(`Closed repo ${handlerState.stagingRepoId}`);
     logInfo(`Waiting repo ${handlerState.stagingRepoId} state closed`);
-    await waitRepoState(nexusClient, handlerState.stagingRepoId, 'closed', actionOptions.closeTimeout);
+    try {
+      await waitRepoState(nexusClient, handlerState.stagingRepoId, 'closed', actionOptions.closeTimeout);
+    } catch (error) {
+      await logActivity(nexusClient, handlerState.stagingRepoId);
+      throw error;
+    }
     endGroup();
   }
 
@@ -75,7 +81,12 @@ export async function handle(actionOptions: ActionOptions): Promise<void> {
     await releaseStagingRepo(nexusClient, actionOptions, handlerState.stagingRepoId);
     logInfo(`Released repo ${handlerState.stagingRepoId}`);
     logInfo(`Waiting repo ${handlerState.stagingRepoId} state released`);
-    await waitRepoState(nexusClient, handlerState.stagingRepoId, 'released', actionOptions.closeTimeout);
+    try {
+      await waitRepoState(nexusClient, handlerState.stagingRepoId, 'released', actionOptions.releaseTimeout);
+    } catch (error) {
+      await logActivity(nexusClient, handlerState.stagingRepoId);
+      throw error;
+    }
     endGroup();
   }
 
@@ -86,6 +97,13 @@ export async function handle(actionOptions: ActionOptions): Promise<void> {
     logInfo(`Dropped repo ${handlerState.stagingRepoId}`);
     endGroup();
   }
+}
+
+async function logActivity(nexusClient: Nexus2Client, stagingRepoId: string): Promise<void> {
+  try {
+    const activities = await stagingRepositoryActivity(nexusClient, stagingRepoId);
+    logWarn(`Repo activities ${inspect(activities, false, 10)}`);
+  } catch (error) {}
 }
 
 interface HandlerState {
