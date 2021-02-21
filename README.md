@@ -34,7 +34,18 @@
 
 See [action.yml](action.yml)
 
-Basic:
+On default this action really does nothing unless needed configs are
+in place.
+
+This normal example of an action does:
+- Takes everything= under base directory _nexus_
+- PGP sign files
+- Create _md5_ and _sha_ checksums
+- Creates a stating repo
+- Uploads everything under _nexus_ into newly create stating repo
+- Closes it and wait closed state
+- Releases it and wait a proper state
+- After all this, you should have artifacts released
 
 ```yaml
 name: Sync
@@ -62,6 +73,8 @@ jobs:
         pgp-sign-passphrase: ${{ secrets.GPG_PASSPHRASE }}
         pgp-sign-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
 ```
+
+There are more detailed docs and samples under [docs](docs) directory.
 
 # License
 

@@ -1,0 +1,101 @@
+# JFrog CLI
+
+Example building a maven project against artifactory
+and handling full release by pulling release artifacts
+out from artifactory and then synching those into nexus.
+
+[source,yaml]
+----
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+    # Getting repo
+    - uses: actions/checkout@v2
+
+    # Setup java version
+    - uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+
+    # Setup maven version
+    - uses: jvalkeal/setup-maven@v1
+      with:
+        maven-version: 3.6.2
+
+    # Setup jfrog cli
+    - uses: jfrog/setup-jfrog-cli@v1
+      with:
+        version: 1.43.2
+      env:
+        JF_ARTIFACTORY_LOCAL: ${{ secrets.JF_ARTIFACTORY_SECRET_LOCAL }}
+
+    # Configure runtime jfrog cli env
+    # expect having artifactory setup for needed repos
+    # changes default cli setting what it sets for build name and number
+    - name: Configure JFrog Cli
+      run: |
+        jfrog rt mvnc \
+          --server-id-resolve=local \
+          --server-id-deploy=local \
+          --repo-resolve-releases=libs-release \
+          --repo-resolve-snapshots=libs-snapshot \
+          --repo-deploy-releases=libs-release \
+          --repo-deploy-snapshots=libs-snapshot
+        echo JFROG_CLI_BUILD_NAME=test-project >> $GITHUB_ENV
+        echo JFROG_CLI_BUILD_NUMBER=$GITHUB_RUN_NUMBER >> $GITHUB_ENV
+        echo JFROG_CLI_BUILD_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID >> $GITHUB_ENV
+
+    # Build and release to artifactory
+    # Should have a release version in artifactory after this
+    # together with build info.
+    - name: Artifactory Release
+      run: |
+        jfrog rt mvn build-helper:parse-version versions:set \
+          -Dartifactory.publish.artifacts=false -DprocessAllModules=false -DgenerateBackupPoms=false \
+          -DnewVersion='${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}'
+        jfrog rt build-clean
+        jfrog rt mvn -U -B clean install -DskipTests
+        jfrog rt build-publish
+
+    # Download released files to get signed
+    - name: Download Release Files
+      run: |
+        jfrog rt download --build $JFROG_CLI_BUILD_NAME/$JFROG_CLI_BUILD_NUMBER "*" nexus/
+
+    # Sync all target files into nexus, then close and release
+    # This simply go through simple steps of
+    #   - create checksum files
+    #   - create staging repo
+    #   - upload files
+    #   - close
+    #   - release
+    - uses: jvalkeal/nexus-sync@main
+      with:
+        username: ${{ secrets.NEXUS_USERNAME }}
+        password: ${{ secrets.NEXUS_PASSWORD }}
+        staging-profile-name: test
+        create: true
+        upload: true
+        close: true
+        close-timeout: 30
+        drop-if-failure: true
+        release: true
+        release-timeout: 30
+        release-auto-drop: true
+        generate-checksums: true
+        generate-checksums-config: >
+          [
+            { "type": "md5", "extension": "md5" },
+            { "type": "sha1", "extension": "sha1" }
+          ]
+        pgp-sign: true
+        pgp-sign-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+        pgp-sign-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+----
