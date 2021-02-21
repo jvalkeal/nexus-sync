@@ -51535,19 +51535,35 @@ function waitRepoState(nexusClient, repositoryIdKey, state, timeout, sleep = 100
             let now = Date.now();
             const until = now + timeout;
             logging_1.logDebug(`Waiting until ${new Date(until)} from now ${new Date(now)}`);
+            let seenRepo = false;
             while (until > now) {
-                const repository = yield nexusClient.stagingRepository(repositoryIdKey);
-                logging_1.logInfo(`Repo state ${repository.type}`);
-                if (repository.type === state) {
-                    resolve();
-                    return;
+                // when repo goes away, i.e. with auto-drop, underlying rest call
+                // will return 404, so don't throw if we've seen repo being there
+                // first time and then assume it's state is ok.
+                let repository;
+                try {
+                    repository = yield nexusClient.stagingRepository(repositoryIdKey);
+                    seenRepo = true;
                 }
-                if (repository.notifications > 0) {
-                    reject(new Error(`Last operation failed with ${repository.notifications} notifications`));
-                    return;
+                catch (error) {
+                    if (error.response.status === 404 && seenRepo) {
+                        resolve();
+                        return;
+                    }
                 }
-                yield utils_1.delayPromise(sleep);
-                now = Date.now();
+                if (repository) {
+                    logging_1.logInfo(`Repo state ${repository.type}`);
+                    if (repository && repository.type === state) {
+                        resolve();
+                        return;
+                    }
+                    if (repository.notifications > 0) {
+                        reject(new Error(`Last operation failed with ${repository.notifications} notifications`));
+                        return;
+                    }
+                    yield utils_1.delayPromise(sleep);
+                    now = Date.now();
+                }
             }
             reject(new Error('Timeout waiting state'));
         }));
@@ -52774,13 +52790,6 @@ function handle(actionOptions) {
             }
             logging_1.endGroup();
         }
-        // drop if needed
-        // if (handlerState.needDrop && handlerState.stagingRepoId) {
-        //   startGroup('Staging Repo Drop');
-        //   await dropStagingRepo(nexusClient, handlerState.stagingRepoId);
-        //   logInfo(`Dropped repo ${handlerState.stagingRepoId}`);
-        //   endGroup();
-        // }
     });
 }
 exports.handle = handle;
