@@ -70,6 +70,9 @@ export async function handle(actionOptions: ActionOptions): Promise<void> {
       await waitRepoState(nexusClient, handlerState.stagingRepoId, 'closed', actionOptions.closeTimeout);
     } catch (error) {
       await logActivity(nexusClient, handlerState.stagingRepoId);
+      if (handlerState.needDrop) {
+        await dropRepo(nexusClient, handlerState.stagingRepoId);
+      }
       throw error;
     }
     endGroup();
@@ -91,18 +94,25 @@ export async function handle(actionOptions: ActionOptions): Promise<void> {
   }
 
   // drop if needed
-  if (handlerState.needDrop && handlerState.stagingRepoId) {
-    startGroup('Staging Repo Drop');
-    await dropStagingRepo(nexusClient, handlerState.stagingRepoId);
-    logInfo(`Dropped repo ${handlerState.stagingRepoId}`);
-    endGroup();
-  }
+  // if (handlerState.needDrop && handlerState.stagingRepoId) {
+  //   startGroup('Staging Repo Drop');
+  //   await dropStagingRepo(nexusClient, handlerState.stagingRepoId);
+  //   logInfo(`Dropped repo ${handlerState.stagingRepoId}`);
+  //   endGroup();
+  // }
 }
 
 async function logActivity(nexusClient: Nexus2Client, stagingRepoId: string): Promise<void> {
   try {
     const activities = await stagingRepositoryActivity(nexusClient, stagingRepoId);
     logWarn(`Repo activities ${inspect(activities, false, 10)}`);
+  } catch (error) {}
+}
+
+async function dropRepo(nexusClient: Nexus2Client, stagingRepoId: string): Promise<void> {
+  try {
+    logInfo(`Dropping repo ${stagingRepoId}`);
+    await dropStagingRepo(nexusClient, stagingRepoId);
   } catch (error) {}
 }
 

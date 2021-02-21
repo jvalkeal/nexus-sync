@@ -1,5 +1,5 @@
 import { handle } from '../src/handler';
-import { ActionOptions } from '../src/interfaces';
+import { ActionOptions, Activity } from '../src/interfaces';
 import * as nexusUtils from '../src/nexus-utils';
 import * as utils from '../src/utils';
 
@@ -9,6 +9,7 @@ describe('handler tests', () => {
   let closeStagingRepoSpy: jest.SpyInstance<Promise<void>>;
   let releaseStagingRepoSpy: jest.SpyInstance<Promise<void>>;
   let dropStagingRepoSpy: jest.SpyInstance<Promise<void>>;
+  let stagingRepositoryActivitySpy: jest.SpyInstance<Promise<Activity[]>>;
   let waitRepoStateSpy: jest.SpyInstance<Promise<void>>;
 
   let generatePgpFilesSpy: jest.SpyInstance<Promise<void>>;
@@ -29,6 +30,9 @@ describe('handler tests', () => {
     });
     dropStagingRepoSpy = jest.spyOn(nexusUtils, 'dropStagingRepo').mockImplementation(() => {
       return Promise.resolve();
+    });
+    stagingRepositoryActivitySpy = jest.spyOn(nexusUtils, 'stagingRepositoryActivity').mockImplementation(() => {
+      return Promise.resolve([]);
     });
     waitRepoStateSpy = jest.spyOn(nexusUtils, 'waitRepoState').mockImplementation(() => {
       return Promise.resolve();
@@ -71,6 +75,7 @@ describe('handler tests', () => {
     expect(closeStagingRepoSpy).not.toHaveBeenCalled();
     expect(releaseStagingRepoSpy).not.toHaveBeenCalled();
     expect(dropStagingRepoSpy).not.toHaveBeenCalled();
+    expect(stagingRepositoryActivitySpy).not.toHaveBeenCalled();
     expect(waitRepoStateSpy).not.toHaveBeenCalled();
     expect(generatePgpFilesSpy).not.toHaveBeenCalled();
     expect(generateChecksumFilesSpy).not.toHaveBeenCalled();
@@ -106,6 +111,7 @@ describe('handler tests', () => {
     expect(closeStagingRepoSpy).not.toHaveBeenCalled();
     expect(releaseStagingRepoSpy).not.toHaveBeenCalled();
     expect(dropStagingRepoSpy).not.toHaveBeenCalled();
+    expect(stagingRepositoryActivitySpy).not.toHaveBeenCalled();
     expect(waitRepoStateSpy).not.toHaveBeenCalled();
     expect(generatePgpFilesSpy).not.toHaveBeenCalled();
     expect(generateChecksumFilesSpy).not.toHaveBeenCalled();
@@ -141,6 +147,7 @@ describe('handler tests', () => {
     expect(closeStagingRepoSpy).not.toHaveBeenCalled();
     expect(releaseStagingRepoSpy).not.toHaveBeenCalled();
     expect(dropStagingRepoSpy).not.toHaveBeenCalled();
+    expect(stagingRepositoryActivitySpy).not.toHaveBeenCalled();
     expect(waitRepoStateSpy).not.toHaveBeenCalled();
     expect(generatePgpFilesSpy).toHaveBeenCalled();
     expect(generateChecksumFilesSpy).not.toHaveBeenCalled();
@@ -176,6 +183,7 @@ describe('handler tests', () => {
     expect(closeStagingRepoSpy).not.toHaveBeenCalled();
     expect(releaseStagingRepoSpy).not.toHaveBeenCalled();
     expect(dropStagingRepoSpy).not.toHaveBeenCalled();
+    expect(stagingRepositoryActivitySpy).not.toHaveBeenCalled();
     expect(waitRepoStateSpy).not.toHaveBeenCalled();
     expect(generatePgpFilesSpy).not.toHaveBeenCalled();
     expect(generateChecksumFilesSpy).toHaveBeenCalled();
@@ -211,6 +219,7 @@ describe('handler tests', () => {
     expect(closeStagingRepoSpy).toHaveBeenCalled();
     expect(releaseStagingRepoSpy).not.toHaveBeenCalled();
     expect(dropStagingRepoSpy).not.toHaveBeenCalled();
+    expect(stagingRepositoryActivitySpy).not.toHaveBeenCalled();
     expect(waitRepoStateSpy).toHaveBeenCalled();
     expect(generatePgpFilesSpy).not.toHaveBeenCalled();
     expect(generateChecksumFilesSpy).not.toHaveBeenCalled();
@@ -246,6 +255,47 @@ describe('handler tests', () => {
     expect(closeStagingRepoSpy).not.toHaveBeenCalled();
     expect(releaseStagingRepoSpy).toHaveBeenCalled();
     expect(dropStagingRepoSpy).not.toHaveBeenCalled();
+    expect(stagingRepositoryActivitySpy).not.toHaveBeenCalled();
+    expect(waitRepoStateSpy).toHaveBeenCalled();
+    expect(generatePgpFilesSpy).not.toHaveBeenCalled();
+    expect(generateChecksumFilesSpy).not.toHaveBeenCalled();
+  });
+
+  it('should drop when close fails', async () => {
+    waitRepoStateSpy.mockClear();
+    waitRepoStateSpy = jest.spyOn(nexusUtils, 'waitRepoState').mockImplementation(() => {
+      return Promise.reject(new Error());
+    });
+    const options: ActionOptions = {
+      dir: 'test',
+      nexusServer: {
+        username: 'admin',
+        password: 'admin123',
+        url: 'http://localhost'
+      },
+      upload: false,
+      create: false,
+      close: true,
+      release: false,
+      releaseAutoDrop: true,
+      closeTimeout: 10,
+      releaseTimeout: 10,
+      dropIfFailure: true,
+      stagingProfileName: 'test',
+      stagingRepoId: 'test-123',
+      generateChecksums: false,
+      generateChecksumsConfig: [],
+      gpgSign: false,
+      gpgSignPassphrase: '',
+      gpgSignPrivateKey: ''
+    };
+    await expect(handle(options)).rejects.toThrow();
+    expect(createStagingRepoSpy).not.toHaveBeenCalled();
+    expect(uploadFilesSpy).not.toHaveBeenCalled();
+    expect(closeStagingRepoSpy).toHaveBeenCalled();
+    expect(releaseStagingRepoSpy).not.toHaveBeenCalled();
+    expect(dropStagingRepoSpy).toHaveBeenCalled();
+    expect(stagingRepositoryActivitySpy).toHaveBeenCalled();
     expect(waitRepoStateSpy).toHaveBeenCalled();
     expect(generatePgpFilesSpy).not.toHaveBeenCalled();
     expect(generateChecksumFilesSpy).not.toHaveBeenCalled();

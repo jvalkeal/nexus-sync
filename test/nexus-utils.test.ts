@@ -1,6 +1,5 @@
 import nock from 'nock';
 import { waitRepoState, stagingRepositoryActivity } from '../src/nexus-utils';
-import { Activity } from '../src/interfaces';
 import { Nexus2Client } from '../src/nexus2-client';
 import { REPOSITORY_1, REPOSITORY_2, REPOSITORY_3, ACTIVITY_1 } from './data/mock-data';
 
