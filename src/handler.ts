@@ -92,14 +92,6 @@ export async function handle(actionOptions: ActionOptions): Promise<void> {
     }
     endGroup();
   }
-
-  // drop if needed
-  // if (handlerState.needDrop && handlerState.stagingRepoId) {
-  //   startGroup('Staging Repo Drop');
-  //   await dropStagingRepo(nexusClient, handlerState.stagingRepoId);
-  //   logInfo(`Dropped repo ${handlerState.stagingRepoId}`);
-  //   endGroup();
-  // }
 }
 
 async function logActivity(nexusClient: Nexus2Client, stagingRepoId: string): Promise<void> {
