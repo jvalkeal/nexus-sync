@@ -51,7 +51,7 @@ inputs:
     description: 'PGP private key passphrase'
     required: false
   url:
-    description: 'Base Nexus url, defaults to "http://localhost:8082/nexus"'
+    description: 'Base Nexus url, defaults to "https://oss.sonatype.org"'
     required: false
   upload:
     description: 'Upload files, defaults to "false".'

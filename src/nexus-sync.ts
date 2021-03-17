@@ -19,7 +19,7 @@ async function run() {
     const release = inputNotRequired('release') === 'true' ? true : false;
     const releaseAutoDrop = inputNotRequired('release-auto-drop') === 'false' ? false : true;
     const releaseTimeout = numberValue(inputNotRequired('release-timeout'), 600);
-    const url = inputNotRequired('url') || 'http://localhost:8082/nexus';
+    const url = inputNotRequired('url') || 'https://oss.sonatype.org';
     const dir = inputNotRequired('dir') || 'nexus';
     const generateChecksums = inputNotRequired('generate-checksums') === 'true' ? true : false;
     const generateChecksumsConfigData = inputNotRequired('generate-checksums-config') || '[]';
