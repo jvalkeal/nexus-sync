@@ -5,7 +5,7 @@ import stream from 'stream';
 import * as openpgp from 'openpgp';
 import crypto from 'crypto';
 import { GenerateChecksum, UploadFile } from './interfaces';
-import { logInfo } from './logging';
+import { logError, logInfo } from './logging';
 
 /**
  * Find files from a base directory to get uploaded by automatically
@@ -149,7 +149,12 @@ export async function generatePgpFiles(baseDir: string, privateKeyArmored: strin
 export async function pgpSign(path: string, privateKeyArmored: string, passphrase: string): Promise<string> {
   const stream = fs.createReadStream(path);
   const message = openpgp.message.fromBinary(stream);
-  const privKeyObj = (await openpgp.key.readArmored(privateKeyArmored)).keys[0];
+  const keyResult = await openpgp.key.readArmored(privateKeyArmored);
+  const privKeyObj = keyResult.keys[0];
+  if (!privKeyObj) {
+    const errorMessages = keyResult.err?.map(e => e.message).join(';');
+    throw new Error(`Error reading key ${errorMessages}`);
+  }
   await privKeyObj.decrypt(passphrase);
   const options = {
     message,

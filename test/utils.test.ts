@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { findFiles, generateChecksumFiles, createCheckSums, pgpSign } from '../src/utils';
-import { TEST_PRIVATE_KEY } from './data/mock-data';
+import { TEST_PRIVATE_KEY, TEST_PRIVATE_KEY_BROKEN_NO_HEADER } from './data/mock-data';
 
 describe('utils.ts', () => {
   function deleteFile(path: string) {
@@ -66,5 +66,10 @@ describe('utils.ts', () => {
     const sig = await pgpSign('test/data/nexus/org/example/test.txt', TEST_PRIVATE_KEY, 'gpgtest');
     // just check that we get something
     expect(sig).not.toBeNull();
+  });
+
+  it('should fail with pgp key', async () => {
+    const sig = pgpSign('test/data/nexus/org/example/test.txt', TEST_PRIVATE_KEY_BROKEN_NO_HEADER, 'gpgtest');
+    await expect(sig).rejects.toThrow('Error reading key Misformed armored text');
   });
 });
