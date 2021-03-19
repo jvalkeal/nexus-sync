@@ -2507,10 +2507,16 @@ function generatePgpFiles(baseDir, privateKeyArmored, passphrase) {
 }
 exports.generatePgpFiles = generatePgpFiles;
 function pgpSign(path, privateKeyArmored, passphrase) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const stream = fs_1.default.createReadStream(path);
         const message = openpgp.message.fromBinary(stream);
-        const privKeyObj = (yield openpgp.key.readArmored(privateKeyArmored)).keys[0];
+        const keyResult = yield openpgp.key.readArmored(privateKeyArmored);
+        const privKeyObj = keyResult.keys[0];
+        if (!privKeyObj) {
+            const errorMessages = (_a = keyResult.err) === null || _a === void 0 ? void 0 : _a.map(e => e.message).join(';');
+            throw new Error(`Error reading key ${errorMessages}`);
+        }
         yield privKeyObj.decrypt(passphrase);
         const options = {
             message,
