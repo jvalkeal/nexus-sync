@@ -30,7 +30,7 @@ export class Nexus2Client {
         username: nexusServer.username,
         password: nexusServer.password
       },
-      timeout: 5000,
+      timeout: nexusServer.timeout,
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json'

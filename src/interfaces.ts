@@ -96,6 +96,7 @@ export interface NexusServer {
   url: string;
   username: string;
   password: string;
+  timeout: number;
 }
 
 export interface GenerateChecksum {

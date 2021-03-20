@@ -15,7 +15,7 @@ import { generateChecksumFiles, generatePgpFiles } from './utils';
 
 export async function handle(actionOptions: ActionOptions): Promise<void> {
   const nexusClient = new Nexus2Client(actionOptions.nexusServer);
-  logDebug(`Using nexus server ${actionOptions.nexusServer.url}`);
+  logDebug(`Using nexus server ${actionOptions.nexusServer.url} with timeout ${actionOptions.nexusServer.timeout}`);
 
   // initial state calculated from a given options
   const handlerState: HandlerState = {

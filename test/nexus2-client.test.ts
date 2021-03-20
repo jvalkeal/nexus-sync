@@ -11,7 +11,8 @@ describe('nexus2-client tests', () => {
     client = new Nexus2Client({
       url: 'http://localhost:8082/nexus',
       username: 'admin',
-      password: 'admin123'
+      password: 'admin123',
+      timeout: 0
     });
   });
 

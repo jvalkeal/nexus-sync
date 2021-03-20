@@ -27,6 +27,7 @@ async function run() {
     const pgpSign = inputNotRequired('pgp-sign') === 'true' ? true : false;
     const pgpSignPrivateKey = inputNotRequired('pgp-sign-private-key');
     const pgpSignPassphrase = inputNotRequired('pgp-sign-passphrase');
+    const nexusTimeout = numberValue(inputNotRequired('nexus-timeout'), 0);
     const actionOptions: ActionOptions = {
       create,
       stagingProfileName,
@@ -42,7 +43,8 @@ async function run() {
       nexusServer: {
         username,
         password,
-        url
+        url,
+        timeout: nexusTimeout * 1000
       },
       generateChecksums,
       generateChecksumsConfig,

@@ -51,7 +51,8 @@ describe('handler tests', () => {
       nexusServer: {
         username: 'admin',
         password: 'admin123',
-        url: 'http://localhost'
+        url: 'http://localhost',
+        timeout: 0
       },
       upload: false,
       create: false,
@@ -87,7 +88,8 @@ describe('handler tests', () => {
       nexusServer: {
         username: 'admin',
         password: 'admin123',
-        url: 'http://localhost'
+        url: 'http://localhost',
+        timeout: 0
       },
       upload: false,
       create: true,
@@ -123,7 +125,8 @@ describe('handler tests', () => {
       nexusServer: {
         username: 'admin',
         password: 'admin123',
-        url: 'http://localhost'
+        url: 'http://localhost',
+        timeout: 0
       },
       upload: false,
       create: false,
@@ -159,7 +162,8 @@ describe('handler tests', () => {
       nexusServer: {
         username: 'admin',
         password: 'admin123',
-        url: 'http://localhost'
+        url: 'http://localhost',
+        timeout: 0
       },
       upload: false,
       create: false,
@@ -195,7 +199,8 @@ describe('handler tests', () => {
       nexusServer: {
         username: 'admin',
         password: 'admin123',
-        url: 'http://localhost'
+        url: 'http://localhost',
+        timeout: 0
       },
       upload: false,
       create: false,
@@ -231,7 +236,8 @@ describe('handler tests', () => {
       nexusServer: {
         username: 'admin',
         password: 'admin123',
-        url: 'http://localhost'
+        url: 'http://localhost',
+        timeout: 0
       },
       upload: false,
       create: false,
@@ -271,7 +277,8 @@ describe('handler tests', () => {
       nexusServer: {
         username: 'admin',
         password: 'admin123',
-        url: 'http://localhost'
+        url: 'http://localhost',
+        timeout: 0
       },
       upload: false,
       create: false,

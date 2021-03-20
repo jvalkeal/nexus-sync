@@ -18,10 +18,10 @@
 | `staging-repo-id`           | Nexus Staging Repo id                                                                              | Optional |
 | `close`                     | Automatically close repository, defaults to "false".                                               | Optional |
 | `drop-if-failure`           | Automatically drop repository, defaults to "false".                                                | Optional |
-| `close-timeout`             | How long to wait before bailing out to wait slow nexus close operation, defaults to "10 minutes"   | Optional |
+| `close-timeout`             | How long in seconds to wait slow nexus close operation, defaults to "600"                          | Optional |
 | `release`                   | Automatically release repository, defaults to "false".                                             | Optional |
 | `release-auto-drop`         | Drop repo after release, defaults to "true".                                                       | Optional |
-| `release-timeout`           | How long to wait before bailing out to wait slow nexus release operation, defaults to "10 minutes" | Optional |
+| `release-timeout`           | How long in seconds to wait slow nexus release operation, defaults to "600"                        | Optional |
 | `generate-checksums`        | Generate checksums, defaults to "false"                                                            | Optional |
 | `generate-checksums-config` | Config to generate checksum files.                                                                 | Optional |
 | `pgp-sign`                  | Sign files, defaults to "false"                                                                    | Optional |
@@ -29,6 +29,7 @@
 | `pgp-sign-passphrase`       | PGP private key passphrase                                                                         | Optional |
 | `url`                       | Base Nexus url, defaults to "http://localhost:8082/nexus"                                          | Optional |
 | `upload`                    | Upload files, defaults to "false".                                                                 | Optional |
+| `nexus-timeout`             | How long in seconds to wait http requests to nexus, defaults to "0" meaning no timeout             | Optional |
 
 # Usage
 
