@@ -2458,7 +2458,7 @@ function numberValue(value, defaultValue) {
     let v;
     if (typeof value === 'string') {
         if (value.length > 0) {
-            const v = parseInt(value, 10);
+            v = parseInt(value, 10);
             if (isNaN(v)) {
                 throw new Error(`Can't parse '${value}' as number`);
             }
@@ -3892,6 +3892,7 @@ function run() {
             const stagingProfileName = inputRequired('staging-profile-name');
             const stagingRepoId = inputNotRequired('staging-repo-id') || undefined;
             const upload = inputNotRequired('upload') === 'true' ? true : false;
+            const uploadParallel = utils_1.numberValue(inputNotRequired('upload-parallel'), 1);
             const close = inputNotRequired('close') === 'true' ? true : false;
             const dropIfFailure = inputNotRequired('drop-if-failure') === 'true' ? true : false;
             const closeTimeout = utils_1.numberValue(inputNotRequired('close-timeout'), 600);
@@ -3907,11 +3908,15 @@ function run() {
             const pgpSignPrivateKey = inputNotRequired('pgp-sign-private-key');
             const pgpSignPassphrase = inputNotRequired('pgp-sign-passphrase');
             const nexusTimeout = utils_1.numberValue(inputNotRequired('nexus-timeout'), 0);
+            if (uploadParallel < 1) {
+                throw new Error(`'upload-parallel' needs to be higher than 0, was ${uploadParallel}`);
+            }
             const actionOptions = {
                 create,
                 stagingProfileName,
                 stagingRepoId,
                 upload,
+                uploadParallel,
                 close,
                 closeTimeout: closeTimeout * 1000,
                 dropIfFailure,
@@ -51475,12 +51480,18 @@ exports.createStagingRepo = createStagingRepo;
 /**
  * Upload all files from a give directory into a staging repository.
  */
-function uploadFiles(nexusClient, dir, stagedRepositoryId) {
+function uploadFiles(nexusClient, dir, stagedRepositoryId, uploadParallel) {
     return __awaiter(this, void 0, void 0, function* () {
-        logging_1.logDebug('Uploading files to staging repo');
+        logging_1.logDebug(`Uploading files to staging repo, uploadParallel=${uploadParallel}`);
         const files = yield utils_1.findFiles(dir);
-        const promises = files.map(f => nexusClient.deployByRepository(f, stagedRepositoryId));
-        yield Promise.all(promises);
+        const len = files.length;
+        // do uploads in defined chunks
+        for (let i = 0; i < len; i += uploadParallel) {
+            const promises = files
+                .slice(i, i + uploadParallel)
+                .map(file => nexusClient.deployByRepository(file, stagedRepositoryId));
+            yield Promise.all(promises);
+        }
     });
 }
 exports.uploadFiles = uploadFiles;
@@ -51874,6 +51885,7 @@ class Nexus2Client {
      */
     deployByRepository(uploadFile, repositoryId) {
         logging_1.logInfo(`Upload for file ${uploadFile.path} and repo ${repositoryId}`);
+        logging_1.logDebug(`File ${uploadFile.path} repositoryId=${repositoryId} group=${uploadFile.group} name=${uploadFile.name}`);
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const stream = fs_1.default.createReadStream(uploadFile.path);
             logging_1.logInfo(`Handling file ${uploadFile.path}`);
@@ -52768,7 +52780,7 @@ function handle(actionOptions) {
         // need to upload files
         if (handlerState.needUpload && handlerState.stagingRepoId) {
             logging_1.startGroup('File Upload');
-            yield nexus_utils_1.uploadFiles(nexusClient, actionOptions.dir, handlerState.stagingRepoId);
+            yield nexus_utils_1.uploadFiles(nexusClient, actionOptions.dir, handlerState.stagingRepoId, actionOptions.uploadParallel);
             logging_1.endGroup();
         }
         // need to close
