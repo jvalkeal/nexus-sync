@@ -34,9 +34,9 @@ describe('utils.ts', () => {
     const uploadFiles = await findFiles('test/data/nexus');
     expect(uploadFiles.length).toBe(2);
     expect(uploadFiles[0].name).toBe('test.txt');
-    expect(uploadFiles[0].group).toBe('org%2Fexample');
+    expect(uploadFiles[0].group).toBe('org/example');
     expect(uploadFiles[1].name).toBe('test.txt.asc');
-    expect(uploadFiles[1].group).toBe('org%2Fexample');
+    expect(uploadFiles[1].group).toBe('org/example');
   });
 
   it('should create checksums', async () => {

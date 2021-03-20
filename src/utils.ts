@@ -21,14 +21,13 @@ export async function findFiles(baseDir: string): Promise<UploadFile[]> {
         return;
       }
       let found: UploadFile[] = [];
-      const regex = /\//gi;
       files.forEach(f => {
         const stat = fs.lstatSync(f);
         if (stat.isFile()) {
           found.push({
             path: f,
             name: path.basename(f),
-            group: path.relative(baseDir, path.dirname(f)).replace(regex, '%2F')
+            group: path.relative(baseDir, path.dirname(f))
           });
           logInfo(`Found ${f}`);
         }
