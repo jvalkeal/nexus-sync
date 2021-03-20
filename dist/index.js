@@ -3906,6 +3906,7 @@ function run() {
             const pgpSign = inputNotRequired('pgp-sign') === 'true' ? true : false;
             const pgpSignPrivateKey = inputNotRequired('pgp-sign-private-key');
             const pgpSignPassphrase = inputNotRequired('pgp-sign-passphrase');
+            const nexusTimeout = utils_1.numberValue(inputNotRequired('nexus-timeout'), 0);
             const actionOptions = {
                 create,
                 stagingProfileName,
@@ -3921,7 +3922,8 @@ function run() {
                 nexusServer: {
                     username,
                     password,
-                    url
+                    url,
+                    timeout: nexusTimeout * 1000
                 },
                 generateChecksums,
                 generateChecksumsConfig,
@@ -51760,7 +51762,7 @@ class Nexus2Client {
                 username: nexusServer.username,
                 password: nexusServer.password
             },
-            timeout: 5000,
+            timeout: nexusServer.timeout,
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json'
@@ -52729,7 +52731,7 @@ const utils_1 = __webpack_require__(163);
 function handle(actionOptions) {
     return __awaiter(this, void 0, void 0, function* () {
         const nexusClient = new nexus2_client_1.Nexus2Client(actionOptions.nexusServer);
-        logging_1.logDebug(`Using nexus server ${actionOptions.nexusServer.url}`);
+        logging_1.logDebug(`Using nexus server ${actionOptions.nexusServer.url} with timeout ${actionOptions.nexusServer.timeout}`);
         // initial state calculated from a given options
         const handlerState = {
             needSign: actionOptions.gpgSign,
