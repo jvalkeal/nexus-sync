@@ -51456,12 +51456,14 @@ const logging_1 = __webpack_require__(71);
  */
 function createStagingRepo(nexusClient, actionOptions) {
     return __awaiter(this, void 0, void 0, function* () {
+        logging_1.logDebug('Resolving staging profile id');
         const stagingProfileId = yield nexusClient.getStagingProfileId(actionOptions.stagingProfileName);
         const data = {
             data: {
                 description: 'Create repo'
             }
         };
+        logging_1.logDebug('Creating staging repo');
         const startResponse = yield nexusClient.createStagingRepo(stagingProfileId, data);
         core.setOutput('staged-repository-id', startResponse.data.stagedRepositoryId);
         return startResponse.data.stagedRepositoryId;
@@ -51473,6 +51475,7 @@ exports.createStagingRepo = createStagingRepo;
  */
 function uploadFiles(nexusClient, dir, stagedRepositoryId) {
     return __awaiter(this, void 0, void 0, function* () {
+        logging_1.logDebug('Uploading files to staging repo');
         const files = yield utils_1.findFiles(dir);
         const promises = files.map(f => nexusClient.deployByRepository(f, stagedRepositoryId));
         yield Promise.all(promises);
@@ -51484,6 +51487,7 @@ exports.uploadFiles = uploadFiles;
  */
 function closeStagingRepo(nexusClient, actionOptions, stagedRepositoryId) {
     return __awaiter(this, void 0, void 0, function* () {
+        logging_1.logDebug('Closing staging repo');
         const stagingProfileId = yield nexusClient.getStagingProfileId(actionOptions.stagingProfileName);
         yield nexusClient.closeStagingRepo(stagingProfileId, {
             data: {
@@ -51499,6 +51503,7 @@ exports.closeStagingRepo = closeStagingRepo;
  */
 function releaseStagingRepo(nexusClient, actionOptions, stagedRepositoryId) {
     return __awaiter(this, void 0, void 0, function* () {
+        logging_1.logDebug('Releasing staging repo');
         yield nexusClient.bulkPromoteStagingRepos({
             data: {
                 description: 'Release repo',
@@ -51514,6 +51519,7 @@ exports.releaseStagingRepo = releaseStagingRepo;
  */
 function dropStagingRepo(nexusClient, stagedRepositoryId) {
     return __awaiter(this, void 0, void 0, function* () {
+        logging_1.logDebug('Dropping staging repo');
         yield nexusClient.dropStagingRepo(stagedRepositoryId, {
             data: {
                 description: 'Release repo',
@@ -51528,6 +51534,7 @@ exports.dropStagingRepo = dropStagingRepo;
  */
 function stagingRepositoryActivity(nexusClient, stagedRepositoryId) {
     return __awaiter(this, void 0, void 0, function* () {
+        logging_1.logDebug('Getting staging repo activity');
         return yield nexusClient.stagingRepositoryActivity(stagedRepositoryId);
     });
 }
@@ -51744,8 +51751,6 @@ const axios_1 = __importDefault(__webpack_require__(53));
 const logging_1 = __webpack_require__(71);
 /**
  * Client for nexus 2.x proving common operations.
- *
- * TODO: don't expose errors as auth headers are there.
  */
 class Nexus2Client {
     constructor(nexusServer) {
@@ -52724,6 +52729,7 @@ const utils_1 = __webpack_require__(163);
 function handle(actionOptions) {
     return __awaiter(this, void 0, void 0, function* () {
         const nexusClient = new nexus2_client_1.Nexus2Client(actionOptions.nexusServer);
+        logging_1.logDebug(`Using nexus server ${actionOptions.nexusServer.url}`);
         // initial state calculated from a given options
         const handlerState = {
             needSign: actionOptions.gpgSign,
