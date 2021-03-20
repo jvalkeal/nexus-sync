@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { findFiles, generateChecksumFiles, createCheckSums, pgpSign } from '../src/utils';
+import { numberValue, findFiles, generateChecksumFiles, createCheckSums, pgpSign } from '../src/utils';
 import { TEST_PRIVATE_KEY, TEST_PRIVATE_KEY_BROKEN_NO_HEADER } from './data/mock-data';
 
 describe('utils.ts', () => {
@@ -18,6 +18,16 @@ describe('utils.ts', () => {
 
   afterEach(() => {
     deleteFiles();
+  });
+
+  it('should parse number values', async () => {
+    expect(numberValue(0, 1)).toBe(0);
+    expect(numberValue(1, 2)).toBe(1);
+    expect(numberValue(3, 1)).toBe(3);
+    expect(numberValue('0', 1)).toBe(0);
+    expect(numberValue('1', 2)).toBe(1);
+    expect(numberValue('3', 1)).toBe(3);
+    expect(numberValue(undefined, 1)).toBe(1);
   });
 
   it('should resolve correct files', async () => {

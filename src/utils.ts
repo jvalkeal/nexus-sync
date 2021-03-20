@@ -100,7 +100,7 @@ export function numberValue(value: number | string | undefined, defaultValue: nu
   let v: number | undefined;
   if (typeof value === 'string') {
     if (value.length > 0) {
-      const v = parseInt(value, 10);
+      v = parseInt(value, 10);
       if (isNaN(v)) {
         throw new Error(`Can't parse '${value}' as number`);
       }
