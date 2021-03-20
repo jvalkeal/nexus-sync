@@ -2373,14 +2373,13 @@ function findFiles(baseDir) {
                     return;
                 }
                 let found = [];
-                const regex = /\//gi;
                 files.forEach(f => {
                     const stat = fs_1.default.lstatSync(f);
                     if (stat.isFile()) {
                         found.push({
                             path: f,
                             name: path_1.default.basename(f),
-                            group: path_1.default.relative(baseDir, path_1.default.dirname(f)).replace(regex, '%2F')
+                            group: path_1.default.relative(baseDir, path_1.default.dirname(f))
                         });
                         logging_1.logInfo(`Found ${f}`);
                     }
