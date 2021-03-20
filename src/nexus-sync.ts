@@ -13,6 +13,7 @@ async function run() {
     const stagingProfileName = inputRequired('staging-profile-name');
     const stagingRepoId = inputNotRequired('staging-repo-id') || undefined;
     const upload = inputNotRequired('upload') === 'true' ? true : false;
+    const uploadParallel = numberValue(inputNotRequired('upload-parallel'), 1);
     const close = inputNotRequired('close') === 'true' ? true : false;
     const dropIfFailure = inputNotRequired('drop-if-failure') === 'true' ? true : false;
     const closeTimeout = numberValue(inputNotRequired('close-timeout'), 600);
@@ -28,11 +29,17 @@ async function run() {
     const pgpSignPrivateKey = inputNotRequired('pgp-sign-private-key');
     const pgpSignPassphrase = inputNotRequired('pgp-sign-passphrase');
     const nexusTimeout = numberValue(inputNotRequired('nexus-timeout'), 0);
+
+    if (uploadParallel < 1) {
+      throw new Error(`'upload-parallel' needs to be higher than 0, was ${uploadParallel}`);
+    }
+
     const actionOptions: ActionOptions = {
       create,
       stagingProfileName,
       stagingRepoId,
       upload,
+      uploadParallel,
       close,
       closeTimeout: closeTimeout * 1000,
       dropIfFailure,

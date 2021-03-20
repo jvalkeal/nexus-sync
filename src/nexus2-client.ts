@@ -16,7 +16,7 @@ import {
   BulkPromoteResponse,
   Activity
 } from './interfaces';
-import { logInfo, logWarn } from './logging';
+import { logDebug, logInfo, logWarn } from './logging';
 
 /**
  * Client for nexus 2.x proving common operations.
@@ -147,6 +147,7 @@ export class Nexus2Client {
    */
   public deployByRepository(uploadFile: UploadFile, repositoryId: string): Promise<void> {
     logInfo(`Upload for file ${uploadFile.path} and repo ${repositoryId}`);
+    logDebug(`File ${uploadFile.path} repositoryId=${repositoryId} group=${uploadFile.group} name=${uploadFile.name}`);
     return new Promise(async (resolve, reject) => {
       const stream = fs.createReadStream(uploadFile.path);
       logInfo(`Handling file ${uploadFile.path}`);

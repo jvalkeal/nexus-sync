@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import { Nexus2Client } from './nexus2-client';
-import { ActionOptions, Activity, PromoteStartRequest, Repository } from './interfaces';
+import { ActionOptions, Activity, PromoteStartRequest, Repository, UploadFile } from './interfaces';
 import { findFiles, delayPromise } from './utils';
 import { logDebug, logInfo } from './logging';
 
@@ -24,11 +24,22 @@ export async function createStagingRepo(nexusClient: Nexus2Client, actionOptions
 /**
  * Upload all files from a give directory into a staging repository.
  */
-export async function uploadFiles(nexusClient: Nexus2Client, dir: string, stagedRepositoryId: string): Promise<void> {
-  logDebug('Uploading files to staging repo');
+export async function uploadFiles(
+  nexusClient: Nexus2Client,
+  dir: string,
+  stagedRepositoryId: string,
+  uploadParallel: number
+): Promise<void> {
+  logDebug(`Uploading files to staging repo, uploadParallel=${uploadParallel}`);
   const files = await findFiles(dir);
-  const promises = files.map(f => nexusClient.deployByRepository(f, stagedRepositoryId));
-  await Promise.all(promises);
+  const len = files.length;
+  // do uploads in defined chunks
+  for (let i = 0; i < len; i += uploadParallel) {
+    const promises = files
+      .slice(i, i + uploadParallel)
+      .map(file => nexusClient.deployByRepository(file, stagedRepositoryId));
+    await Promise.all(promises);
+  }
 }
 
 /**

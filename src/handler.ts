@@ -57,7 +57,7 @@ export async function handle(actionOptions: ActionOptions): Promise<void> {
   // need to upload files
   if (handlerState.needUpload && handlerState.stagingRepoId) {
     startGroup('File Upload');
-    await uploadFiles(nexusClient, actionOptions.dir, handlerState.stagingRepoId);
+    await uploadFiles(nexusClient, actionOptions.dir, handlerState.stagingRepoId, actionOptions.uploadParallel);
     endGroup();
   }
 

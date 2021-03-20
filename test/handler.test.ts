@@ -55,6 +55,7 @@ describe('handler tests', () => {
         timeout: 0
       },
       upload: false,
+      uploadParallel: 1,
       create: false,
       close: false,
       release: false,
@@ -92,6 +93,7 @@ describe('handler tests', () => {
         timeout: 0
       },
       upload: false,
+      uploadParallel: 1,
       create: true,
       close: false,
       release: false,
@@ -129,6 +131,7 @@ describe('handler tests', () => {
         timeout: 0
       },
       upload: false,
+      uploadParallel: 1,
       create: false,
       close: false,
       release: false,
@@ -166,6 +169,7 @@ describe('handler tests', () => {
         timeout: 0
       },
       upload: false,
+      uploadParallel: 1,
       create: false,
       close: false,
       release: false,
@@ -203,6 +207,7 @@ describe('handler tests', () => {
         timeout: 0
       },
       upload: false,
+      uploadParallel: 1,
       create: false,
       close: true,
       release: false,
@@ -240,6 +245,7 @@ describe('handler tests', () => {
         timeout: 0
       },
       upload: false,
+      uploadParallel: 1,
       create: false,
       close: false,
       release: true,
@@ -281,6 +287,7 @@ describe('handler tests', () => {
         timeout: 0
       },
       upload: false,
+      uploadParallel: 1,
       create: false,
       close: true,
       release: false,

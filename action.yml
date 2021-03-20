@@ -56,6 +56,9 @@ inputs:
   upload:
     description: 'Upload files, defaults to "false".'
     required: false
+  upload-parallel:
+    description: 'How many files are uploaded parallel, defaults to "1"'
+    required: false
   dir:
     description: 'Base directory for files to sync, defaults to "nexus"'
     required: false

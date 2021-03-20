@@ -112,6 +112,7 @@ export interface ActionOptions {
   stagingProfileName: string;
   stagingRepoId: string | undefined;
   upload: boolean;
+  uploadParallel: number;
   close: boolean;
   closeTimeout: number;
   dropIfFailure: boolean;
