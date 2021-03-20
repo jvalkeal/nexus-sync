@@ -8,12 +8,14 @@ import { logDebug, logInfo } from './logging';
  * Create a staging repo and return its id for furher operations.
  */
 export async function createStagingRepo(nexusClient: Nexus2Client, actionOptions: ActionOptions): Promise<string> {
+  logDebug('Resolving staging profile id');
   const stagingProfileId = await nexusClient.getStagingProfileId(actionOptions.stagingProfileName);
   const data: PromoteStartRequest = {
     data: {
       description: 'Create repo'
     }
   };
+  logDebug('Creating staging repo');
   const startResponse = await nexusClient.createStagingRepo(stagingProfileId, data);
   core.setOutput('staged-repository-id', startResponse.data.stagedRepositoryId);
   return startResponse.data.stagedRepositoryId;
@@ -23,6 +25,7 @@ export async function createStagingRepo(nexusClient: Nexus2Client, actionOptions
  * Upload all files from a give directory into a staging repository.
  */
 export async function uploadFiles(nexusClient: Nexus2Client, dir: string, stagedRepositoryId: string): Promise<void> {
+  logDebug('Uploading files to staging repo');
   const files = await findFiles(dir);
   const promises = files.map(f => nexusClient.deployByRepository(f, stagedRepositoryId));
   await Promise.all(promises);
@@ -36,6 +39,7 @@ export async function closeStagingRepo(
   actionOptions: ActionOptions,
   stagedRepositoryId: string
 ): Promise<void> {
+  logDebug('Closing staging repo');
   const stagingProfileId = await nexusClient.getStagingProfileId(actionOptions.stagingProfileName);
   await nexusClient.closeStagingRepo(stagingProfileId, {
     data: {
@@ -53,6 +57,7 @@ export async function releaseStagingRepo(
   actionOptions: ActionOptions,
   stagedRepositoryId: string
 ): Promise<void> {
+  logDebug('Releasing staging repo');
   await nexusClient.bulkPromoteStagingRepos({
     data: {
       description: 'Release repo',
@@ -66,6 +71,7 @@ export async function releaseStagingRepo(
  * Drop staging repository.
  */
 export async function dropStagingRepo(nexusClient: Nexus2Client, stagedRepositoryId: string): Promise<void> {
+  logDebug('Dropping staging repo');
   await nexusClient.dropStagingRepo(stagedRepositoryId, {
     data: {
       description: 'Release repo',
@@ -81,6 +87,7 @@ export async function stagingRepositoryActivity(
   nexusClient: Nexus2Client,
   stagedRepositoryId: string
 ): Promise<Activity[]> {
+  logDebug('Getting staging repo activity');
   return await nexusClient.stagingRepositoryActivity(stagedRepositoryId);
 }
 

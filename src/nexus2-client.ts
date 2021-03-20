@@ -20,8 +20,6 @@ import { logInfo, logWarn } from './logging';
 
 /**
  * Client for nexus 2.x proving common operations.
- *
- * TODO: don't expose errors as auth headers are there.
  */
 export class Nexus2Client {
   private instance: AxiosInstance;

@@ -1,6 +1,6 @@
 import { inspect } from 'util';
 import { ActionOptions } from './interfaces';
-import { endGroup, logInfo, logWarn, startGroup } from './logging';
+import { endGroup, logDebug, logInfo, logWarn, startGroup } from './logging';
 import {
   closeStagingRepo,
   createStagingRepo,
@@ -15,6 +15,7 @@ import { generateChecksumFiles, generatePgpFiles } from './utils';
 
 export async function handle(actionOptions: ActionOptions): Promise<void> {
   const nexusClient = new Nexus2Client(actionOptions.nexusServer);
+  logDebug(`Using nexus server ${actionOptions.nexusServer.url}`);
 
   // initial state calculated from a given options
   const handlerState: HandlerState = {

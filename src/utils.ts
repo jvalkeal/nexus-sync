@@ -5,7 +5,7 @@ import stream from 'stream';
 import * as openpgp from 'openpgp';
 import crypto from 'crypto';
 import { GenerateChecksum, UploadFile } from './interfaces';
-import { logError, logInfo } from './logging';
+import { logInfo } from './logging';
 
 /**
  * Find files from a base directory to get uploaded by automatically
