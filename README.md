@@ -27,7 +27,7 @@
 | `pgp-sign`                  | Sign files, defaults to "false"                                                                    | Optional |
 | `pgp-sign-private-key`      | PGP private key as ascii armored                                                                   | Optional |
 | `pgp-sign-passphrase`       | PGP private key passphrase                                                                         | Optional |
-| `url`                       | Base Nexus url, defaults to "http://localhost:8082/nexus"                                          | Optional |
+| `url`                       | Base Nexus url, defaults to "https://oss.sonatype.org"                                             | Optional |
 | `upload`                    | Upload files, defaults to "false".                                                                 | Optional |
 | `upload-parallel`           | How many files are uploaded parallel, defaults to "1"                                              | Optional |
 | `nexus-timeout`             | How long in seconds to wait http requests to nexus, defaults to "0" meaning no timeout             | Optional |
