@@ -51773,6 +51773,8 @@ class Nexus2Client {
                 password: nexusServer.password
             },
             timeout: nexusServer.timeout,
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity,
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json'
