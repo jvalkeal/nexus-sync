@@ -1,11 +1,4 @@
-# Ignore node_modules, ncc is used to compile nodejs modules into a single file
-# https://github.com/vercel/ncc/issues/538
-/node_modules/*
-!/node_modules/asn1.js/
-!/node_modules/bn.js/
-!/node_modules/inherits/
-!/node_modules/safer-buffer/
-!/node_modules/minimalistic-assert/
+node_modules/
 __tests__/runnerg/*
 
 
