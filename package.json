@@ -5,7 +5,7 @@
   "description": "Issue handler action",
   "main": "dist/index.js",
   "scripts": {
-    "build": "ncc build src/nexus-sync.ts",
+    "build": "ncc build src/main.ts",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
     "prerelease": "npm run-script build",

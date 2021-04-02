@@ -105,6 +105,14 @@ export interface GenerateChecksum {
 }
 
 /**
+ * Default checksum config.
+ */
+export const DEFAULT_GENERATE_CHECKSUM_CONFIG: GenerateChecksum[] = [
+  { type: 'md5', extension: 'md5' },
+  { type: 'sha1', extension: 'sha1' }
+];
+
+/**
  * Options for action to ease passing those around.
  */
 export interface ActionOptions {

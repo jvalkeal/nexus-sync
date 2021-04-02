@@ -1,11 +1,11 @@
 import * as core from '@actions/core';
 import { inspect } from 'util';
 import { handle } from './handler';
-import { ActionOptions, GenerateChecksum } from './interfaces';
+import { ActionOptions, DEFAULT_GENERATE_CHECKSUM_CONFIG, GenerateChecksum } from './interfaces';
 import { logDebug } from './logging';
 import { numberValue } from './utils';
 
-async function run() {
+export async function run() {
   try {
     const username = inputRequired('username');
     const password = inputRequired('password');
@@ -23,8 +23,10 @@ async function run() {
     const url = inputNotRequired('url') || 'https://oss.sonatype.org';
     const dir = inputNotRequired('dir') || 'nexus';
     const generateChecksums = inputNotRequired('generate-checksums') === 'true' ? true : false;
-    const generateChecksumsConfigData = inputNotRequired('generate-checksums-config') || '[]';
-    const generateChecksumsConfig: GenerateChecksum[] = JSON.parse(generateChecksumsConfigData);
+    const generateChecksumsConfigData = inputNotRequired('generate-checksums-config') || undefined;
+    const generateChecksumsConfig: GenerateChecksum[] = generateChecksumsConfigData
+      ? JSON.parse(generateChecksumsConfigData)
+      : DEFAULT_GENERATE_CHECKSUM_CONFIG;
     const pgpSign = inputNotRequired('pgp-sign') === 'true' ? true : false;
     const pgpSignPrivateKey = inputNotRequired('pgp-sign-private-key');
     const pgpSignPassphrase = inputNotRequired('pgp-sign-passphrase');
@@ -73,5 +75,3 @@ function inputRequired(id: string): string {
 function inputNotRequired(id: string): string {
   return core.getInput(id, { required: false });
 }
-
-run();
