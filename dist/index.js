@@ -34,7 +34,7 @@ module.exports =
 /******/ 	// the startup function
 /******/ 	function startup() {
 /******/ 		// Load entry module and return exports
-/******/ 		return __webpack_require__(366);
+/******/ 		return __webpack_require__(131);
 /******/ 	};
 /******/
 /******/ 	// run startup
@@ -2171,6 +2171,18 @@ exports.realpath = function realpath(p, cache, cb) {
 
 /***/ }),
 
+/***/ 131:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const nexus_sync_1 = __webpack_require__(366);
+nexus_sync_1.run();
+
+
+/***/ }),
+
 /***/ 133:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -3374,6 +3386,24 @@ module.exports = {
 
 /***/ }),
 
+/***/ 264:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DEFAULT_GENERATE_CHECKSUM_CONFIG = void 0;
+/**
+ * Default checksum config.
+ */
+exports.DEFAULT_GENERATE_CHECKSUM_CONFIG = [
+    { type: 'md5', extension: 'md5' },
+    { type: 'sha1', extension: 'sha1' }
+];
+
+
+/***/ }),
+
 /***/ 283:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -3877,9 +3907,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.run = void 0;
 const core = __importStar(__webpack_require__(470));
 const util_1 = __webpack_require__(669);
 const handler_1 = __webpack_require__(895);
+const interfaces_1 = __webpack_require__(264);
 const logging_1 = __webpack_require__(71);
 const utils_1 = __webpack_require__(163);
 function run() {
@@ -3901,8 +3933,10 @@ function run() {
             const url = inputNotRequired('url') || 'https://oss.sonatype.org';
             const dir = inputNotRequired('dir') || 'nexus';
             const generateChecksums = inputNotRequired('generate-checksums') === 'true' ? true : false;
-            const generateChecksumsConfigData = inputNotRequired('generate-checksums-config') || '[]';
-            const generateChecksumsConfig = JSON.parse(generateChecksumsConfigData);
+            const generateChecksumsConfigData = inputNotRequired('generate-checksums-config') || undefined;
+            const generateChecksumsConfig = generateChecksumsConfigData
+                ? JSON.parse(generateChecksumsConfigData)
+                : interfaces_1.DEFAULT_GENERATE_CHECKSUM_CONFIG;
             const pgpSign = inputNotRequired('pgp-sign') === 'true' ? true : false;
             const pgpSignPrivateKey = inputNotRequired('pgp-sign-private-key');
             const pgpSignPassphrase = inputNotRequired('pgp-sign-passphrase');
@@ -3943,13 +3977,13 @@ function run() {
         }
     });
 }
+exports.run = run;
 function inputRequired(id) {
     return core.getInput(id, { required: true });
 }
 function inputNotRequired(id) {
     return core.getInput(id, { required: false });
 }
-run();
 
 
 /***/ }),
