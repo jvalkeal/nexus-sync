@@ -23,15 +23,15 @@ You need credentials to nexus:
     password: ${{ secrets.OSSRH_PASSWORD }}
 ----
 
-Where `url` for central would be i.e. `https://s01.oss.sonatype.org/` or
-`https://oss.sonatype.org/`. Action defaults to `https://oss.sonatype.org/`.
+Where `url` for central would be i.e. `https://s01.oss.sonatype.org` or
+`https://oss.sonatype.org`. Action defaults to `https://oss.sonatype.org`.
 
 ## Base Directory
 
 Actions works in a base directory of a `nexus` as a default which can
-be changed with option `dir`. Structure of this directure is expected
+be changed with option `dir`. Structure of this directory is expected
 to be fully qualified maven structure as is. Meaning if you have
-a maven artifact `org.example.demo:0.0.1:demo1:jar`, its should be under:
+a maven artifact `org.example.demo:0.0.1:demo1:jar`, it should look like:
 
 [source,bash]
 ----
@@ -42,7 +42,7 @@ nexus/org/example/demo/0.0.1/demo1-0.0.1.jar
 ## PGP Sign
 Central needs a signed files and we can do that with an action
 by providing ascii armored private key and its keyphrase. All files
-in a base directory fill be signed.
+in a base directory will be signed.
 
 [source,yml]
 ----
@@ -81,7 +81,7 @@ and `sha512` if you need more that what's actually required by central.
 ----
 
 ## Create Staging Repo
-Instruct a stating repo create:
+Instruct a staging repo create:
 
 [source,yml]
 ----
@@ -91,7 +91,7 @@ Instruct a stating repo create:
 ----
 
 ## Close Staging Repo
-Instruct a stating repo create:
+Instruct a staging repo create:
 
 [source,yml]
 ----
@@ -101,7 +101,7 @@ Instruct a stating repo create:
 ----
 
 ## Release Staging Repo
-Instruct a stating repo create:
+Instruct a staging repo release:
 
 [source,yml]
 ----
