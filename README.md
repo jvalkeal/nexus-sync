@@ -66,11 +66,6 @@ jobs:
         close: true
         release: true
         generate-checksums: true
-        generate-checksums-config: >
-          [
-            { "type": "md5", "extension": "md5" },
-            { "type": "sha1", "extension": "sha1" }
-          ]
         pgp-sign: true
         pgp-sign-passphrase: ${{ secrets.GPG_PASSPHRASE }}
         pgp-sign-private-key: ${{ secrets.GPG_PRIVATE_KEY }}

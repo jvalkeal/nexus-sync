@@ -1,0 +1,154 @@
+[generic-usage]
+# Generic Usage
+
+This actions splits into different sections which are:
+
+- create checksum files
+- create a pgp signature files
+- creating a staging repo
+- uploading files into a staging repo
+- closing a staging repo
+- releasing a staging repo
+
+## Provide Nexus Settings
+
+You need credentials to nexus:
+
+[source,yml]
+----
+- uses: jvalkeal/nexus-sync@main
+  with:
+    url: ${{ secrets.OSSRH_URL }}
+    username: ${{ secrets.OSSRH_USERNAME }}
+    password: ${{ secrets.OSSRH_PASSWORD }}
+----
+
+Where `url` for central would be i.e. `https://s01.oss.sonatype.org/` or
+`https://oss.sonatype.org/`. Action defaults to `https://oss.sonatype.org/`.
+
+## Base Directory
+
+Actions works in a base directory of a `nexus` as a default which can
+be changed with option `dir`. Structure of this directure is expected
+to be fully qualified maven structure as is. Meaning if you have
+a maven artifact `org.example.demo:0.0.1:demo1:jar`, its should be under:
+
+[source,bash]
+----
+$ find nexus
+nexus/org/example/demo/0.0.1/demo1-0.0.1.jar
+----
+
+## PGP Sign
+Central needs a signed files and we can do that with an action
+by providing ascii armored private key and its keyphrase. All files
+in a base directory fill be signed.
+
+[source,yml]
+----
+- uses: jvalkeal/nexus-sync@main
+  with:
+    pgp-sign: true
+    pgp-sign-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+    pgp-sign-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+----
+
+## Checksums
+Cental needs files to have a checksums, so you need to do that.
+
+[source,yml]
+----
+- uses: jvalkeal/nexus-sync@main
+  with:
+    generate-checksums: true
+----
+
+Checksum config defaults to what is shown below. In a config `type` is
+what is supported natively in node and `extension` defines created
+file extension. Usually with central you can pick `md5`, `sha1`, `sha256`
+and `sha512` if you need more that what's actually required by central.
+
+[source,yml]
+----
+- uses: jvalkeal/nexus-sync@main
+  with:
+    generate-checksums: true
+    generate-checksums-config: >
+      [
+        { "type": "md5", "extension": "md5" },
+        { "type": "sha1", "extension": "sha1" }
+      ]
+----
+
+## Create Staging Repo
+Instruct a stating repo create:
+
+[source,yml]
+----
+- uses: jvalkeal/nexus-sync@main
+  with:
+    create: true
+----
+
+## Close Staging Repo
+Instruct a stating repo create:
+
+[source,yml]
+----
+- uses: jvalkeal/nexus-sync@main
+  with:
+    close: true
+----
+
+## Release Staging Repo
+Instruct a stating repo create:
+
+[source,yml]
+----
+- uses: jvalkeal/nexus-sync@main
+  with:
+    release: true
+----
+
+## Separate Create and Close/Release
+If create/close/release are done in one actions step,
+internally created staging repo id is used. However if
+these steps are separated to manually executed actions,
+staged repo id needs to be passed into workflow manually.
+
+[source,yml]
+----
+- uses: jvalkeal/nexus-sync@main
+  id: nexus
+  with:
+    release: create
+- name: Print Staging Repo Id
+    run: echo ${{ steps.nexus.outputs.staged-repository-id }}
+----
+
+Then for example in a separate workflow closing a repo would
+look something like:
+
+[source,yml]
+----
+name: Central Sync Close
+
+on:
+  workflow_dispatch:
+    inputs:
+      stagedRepositoryId:
+        description: "Staged repository id"
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: jvalkeal/nexus-sync@main
+      with:
+        username: ${{ secrets.OSSRH_USERNAME }}
+        password: ${{ secrets.OSSRH_PASSWORD }}
+        staging-profile-name: my-profile-name
+        staging-repo-id: ${{ github.event.inputs.stagedRepositoryId }}
+        close: true
+----
