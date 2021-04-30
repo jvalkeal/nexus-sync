@@ -1,8 +1,7 @@
 import fs from 'fs';
 import glob from 'glob';
 import path from 'path';
-import stream from 'stream';
-import * as openpgp from 'openpgp';
+import { createMessage, readKey, decryptKey, sign, stream } from 'openpgp';
 import crypto from 'crypto';
 import { GenerateChecksum, UploadFile } from './interfaces';
 import { logInfo } from './logging';
@@ -146,30 +145,16 @@ export async function generatePgpFiles(baseDir: string, privateKeyArmored: strin
 }
 
 export async function pgpSign(path: string, privateKeyArmored: string, passphrase: string): Promise<string> {
-  const stream = fs.createReadStream(path);
-  const message = openpgp.message.fromBinary(stream);
-  const keyResult = await openpgp.key.readArmored(privateKeyArmored);
-  const privKeyObj = keyResult.keys[0];
-  if (!privKeyObj) {
-    const errorMessages = keyResult.err?.map(e => e.message).join(';');
-    throw new Error(`Error reading key ${errorMessages}`);
-  }
-  await privKeyObj.decrypt(passphrase);
-  const options = {
-    message,
-    privateKeys: [privKeyObj],
-    detached: true
-  };
-  const signResult = await openpgp.sign(options);
-  const resultStream: stream = signResult.signature;
-  return streamToString(resultStream);
-}
-
-function streamToString(stream: stream): Promise<string> {
-  const chunks: Uint8Array[] = [];
-  return new Promise<string>((resolve, reject) => {
-    stream.on('data', chunk => chunks.push(chunk));
-    stream.on('error', reject);
-    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+  const privateKey = await decryptKey({
+    privateKey: await readKey({ armoredKey: privateKeyArmored }),
+    passphrase
   });
+  const readStream = fs.createReadStream(path);
+  const message = await createMessage({ binary: readStream });
+  const resultStream = await sign({
+    message,
+    privateKeys: privateKey,
+    detached: true
+  });
+  return await stream.readToEnd(resultStream);
 }
