@@ -80,6 +80,6 @@ describe('utils.ts', () => {
 
   it('should fail with pgp key', async () => {
     const sig = pgpSign('test/data/nexus/org/example/test.txt', TEST_PRIVATE_KEY_BROKEN_NO_HEADER, 'gpgtest');
-    await expect(sig).rejects.toThrow('Error reading key Misformed armored text');
+    await expect(sig).rejects.toThrow(/Misformed armored text/);
   });
 });
