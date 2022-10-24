@@ -11,7 +11,7 @@ import {
   stagingRepositoryActivity
 } from './nexus-utils';
 import { Nexus2Client } from './nexus2-client';
-import { generateChecksumFiles, generatePgpFiles } from './utils';
+import { generateChecksumFiles, generatePgpFiles, delayPromise } from './utils';
 
 export async function handle(actionOptions: ActionOptions): Promise<void> {
   const nexusClient = new Nexus2Client(actionOptions.nexusServer);
@@ -82,6 +82,12 @@ export async function handle(actionOptions: ActionOptions): Promise<void> {
   // need to release
   if (handlerState.needRelease && handlerState.stagingRepoId) {
     startGroup('Staging Repo Release');
+    // looks like we get 500 if release is done too quickly
+    // after close so instead of implementing full retry, just sleep
+    // a bit before going into release request
+    if (handlerState.needClose) {
+      await delayPromise(10000);
+    }
     await releaseStagingRepo(nexusClient, actionOptions, handlerState.stagingRepoId);
     logInfo(`Released repo ${handlerState.stagingRepoId}`);
     logInfo(`Waiting repo ${handlerState.stagingRepoId} state released`);
