@@ -88,7 +88,12 @@ export async function handle(actionOptions: ActionOptions): Promise<void> {
     if (handlerState.needClose) {
       await delayPromise(10000);
     }
-    await releaseStagingRepo(nexusClient, actionOptions, handlerState.stagingRepoId);
+    try {
+      await releaseStagingRepo(nexusClient, actionOptions, handlerState.stagingRepoId);
+    } catch (error) {
+      await logActivity(nexusClient, handlerState.stagingRepoId);
+      throw error;
+    }
     logInfo(`Released repo ${handlerState.stagingRepoId}`);
     logInfo(`Waiting repo ${handlerState.stagingRepoId} state released`);
     try {
@@ -104,7 +109,7 @@ export async function handle(actionOptions: ActionOptions): Promise<void> {
 async function logActivity(nexusClient: Nexus2Client, stagingRepoId: string): Promise<void> {
   try {
     const activities = await stagingRepositoryActivity(nexusClient, stagingRepoId);
-    logWarn(`Repo activities ${inspect(activities, false, 10)}`);
+    logInfo(`Repo activities ${inspect(activities, false, 10)}`);
   } catch (error) {}
 }
 
